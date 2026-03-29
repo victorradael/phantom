@@ -5,42 +5,47 @@ import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
 import GhostLogo from './components/GhostLogo'
 
-const getFavicon = (url) => {
-    try {
-        const hostname = new URL(url).hostname
-        // DuckDuckGo favicon service is often more reliable for various subdomains
-        return `https://icons.duckduckgo.com/ip3/${hostname}.ico`
-    } catch (e) {
-        return null
-    }
-}
-
-function PageIcon({ url }) {
-    const [status, setStatus] = useState('ddg') // ddg -> google -> error
+// FIX-6: Removed Google fallback to prevent hostname leakage to a third-party.
+// eager=false can be passed to skip the request (e.g. for prefetch avoidance).
+function PageIcon({ url, eager = true }) {
+    const [status, setStatus] = useState(eager ? 'ddg' : 'idle')
 
     const hostname = (() => {
         try { return new URL(url).hostname }
         catch { return '' }
     })()
 
-    const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`
-    const googleUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`
-
-    if (status === 'error' || !hostname) {
+    if (status === 'idle' || status === 'error' || !hostname) {
         return <Globe size={20} className="text-gray-600" />
     }
 
+    const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`
+
     return (
         <img
-            src={status === 'ddg' ? ddgUrl : googleUrl}
+            src={ddgUrl}
             alt=""
             className="w-6 h-6 object-contain"
-            onError={() => {
-                if (status === 'ddg') setStatus('google')
-                else setStatus('error')
-            }}
+            onError={() => setStatus('error')}
         />
     )
+}
+
+// FIX-5: Validates URL and restricts to http/https only.
+// Strips embedded credentials (user:pass@host) and normalises the URL.
+const ALLOWED_PROTOCOLS = ['https:', 'http:']
+const sanitizeUrl = (raw) => {
+    let candidate = raw.trim()
+    if (!/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(candidate)) {
+        candidate = 'https://' + candidate
+    }
+    try {
+        const parsed = new URL(candidate)
+        if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) return null
+        return parsed.origin + parsed.pathname + parsed.search + parsed.hash
+    } catch {
+        return null
+    }
 }
 
 function App() {
@@ -93,11 +98,11 @@ function App() {
 
     const addUrl = () => {
         if (!newUrl) return
-        let urlToAdd = newUrl
-        if (!/^https?:\/\//i.test(urlToAdd)) {
-            urlToAdd = 'https://' + urlToAdd
+        const urlToAdd = sanitizeUrl(newUrl)
+        if (!urlToAdd) {
+            alert('URL inválida ou protocolo não permitido. Use apenas http:// ou https://')
+            return
         }
-
         setUrls([...urls, {
             id: Date.now(),
             url: urlToAdd,
@@ -129,7 +134,7 @@ function App() {
         if (!webview) return
 
         const handleFail = (e) => {
-            console.error('Webview failed to load:', e)
+            if (import.meta.env.DEV) console.error('Webview failed to load:', e)
             setLoadError(e.errorDescription || 'Error loading page. Check the URL or your connection.')
         }
 
@@ -170,7 +175,7 @@ function App() {
                     </button>
                     <div className="flex items-center gap-2 min-w-0">
                         <div className="scale-75 origin-left w-5 h-5 flex items-center justify-center shrink-0">
-                            <PageIcon url={currentUrl} />
+                            <PageIcon url={currentUrl} eager={true} />
                         </div>
                         <div className="flex flex-col min-w-0">
                             <span className="text-xs font-medium text-gray-200 truncate leading-tight">
@@ -222,7 +227,7 @@ function App() {
                     src={currentUrl}
                     className="w-full h-full"
                     allowpopups="true"
-                    useragent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    partition="persist:browsing"
                 ></webview>
             </div>
         </div>
@@ -244,12 +249,11 @@ function App() {
                         <h1 className="text-2xl font-bold flex items-center gap-2 relative">
                             <GhostLogo isHidden={isGhostHidden} onTrigger={handleGhostTrigger} />
                             <span
-                                className="transition-all duration-[1500ms] ease-in-out block"
-                                style={{
-                                    filter: isGhostHidden ? 'blur(10px)' : 'blur(0)',
-                                    opacity: isGhostHidden ? 0 : 1,
-                                    transform: isGhostHidden ? 'scale(1.2) translateY(-10px)' : 'scale(1) translateY(0)'
-                                }}
+                                className={`transition-all duration-[1500ms] ease-in-out block ${
+                                    isGhostHidden
+                                        ? 'blur-[10px] opacity-0 scale-[1.2] -translate-y-[10px]'
+                                        : 'blur-0 opacity-100 scale-100 translate-y-0'
+                                }`}
                             >
                                 Phantom
                             </span>
@@ -299,7 +303,10 @@ function App() {
                             <div key={item.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between group hover:border-blue-500/50 transition-colors w-full min-w-0">
                                 <div
                                     className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
-                                    onClick={() => setCurrentUrl(item.url)}
+                                    onClick={() => {
+                                        const safe = sanitizeUrl(item.url)
+                                        if (safe) setCurrentUrl(safe)
+                                    }}
                                 >
                                     <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center shrink-0 border border-gray-700 overflow-hidden">
                                         <PageIcon url={item.url} />
@@ -364,7 +371,7 @@ function App() {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.ctrlKey && e.key === 'q') {
-                window.api.invoke('quit-app')
+                window.api.quitApp()
             }
         }
         window.addEventListener('keydown', handleKeyDown)
@@ -372,7 +379,7 @@ function App() {
     }, [])
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-gray-900 border border-gray-700 relative" style={{ cursor: isResizing ? 'col-resize' : 'default' }}>
+        <div className={`flex h-screen w-screen overflow-hidden bg-gray-900 border border-gray-700 relative ${isResizing ? 'cursor-col-resize' : 'cursor-default'}`}>
             {/* Global Invisible Drag Handle for easy window movement */}
             <div className="fixed top-0 left-0 right-0 h-1 z-[9999] draggable pointer-events-none"></div>
 
@@ -383,7 +390,7 @@ function App() {
             {isSidebarOpen && (
                 <div
                     className="border-l border-gray-700 flex flex-col bg-white shrink-0 shadow-xl z-50 relative"
-                    style={{ width: sidebarWidth }}
+                    style={{ width: `${sidebarWidth}px` }}
                 >
                     {/* Resizer Handle */}
                     <div
@@ -406,8 +413,8 @@ function App() {
                         <webview
                             src="https://vault.bitwarden.com"
                             className="w-full h-full"
-                            useragent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                             allowpopups="true"
+                            partition="persist:bitwarden"
                         ></webview>
                     </div>
                 </div>

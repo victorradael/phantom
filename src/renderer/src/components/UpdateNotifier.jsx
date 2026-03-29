@@ -28,22 +28,24 @@ export default function UpdateNotifier({ currentVersion }) {
                     setIsVisible(true)
                 }
             } catch (error) {
-                console.error('Failed to check for updates:', error)
+                // FIX-11: Handled promise rejection — log only in dev
+                if (import.meta.env.DEV) console.error('Failed to check for updates:', error)
             }
         }
 
-        checkUpdate()
+        // FIX-11: Attach catch to the top-level call
+        checkUpdate().catch((err) => {
+            if (import.meta.env.DEV) console.error('[UpdateNotifier] Unexpected error:', err)
+        })
     }, [currentVersion])
 
-    const handleUpdateClick = () => {
-        // Open the release page in the default browser
-        if (window.electron && window.electron.ipcRenderer) {
-            window.electron.ipcRenderer.send('open-external', downloadUrl)
+    // FIX-4 + FIX-7: Use the secure preload bridge (window.api.openExternal) instead of
+    // direct ipcRenderer access. Removed the curl|bash clipboard copy — opens the
+    // GitHub release page directly so the user can download a signed package.
+    const handleUpdateClick = async () => {
+        if (downloadUrl && window.api?.openExternal) {
+            await window.api.openExternal(downloadUrl)
         }
-        // Or better, we could provide the one-liner install command to the clipboard
-        const installCmd = `curl -fsSL https://raw.githubusercontent.com/${REPO}/master/scripts/install.sh | bash`
-        navigator.clipboard.writeText(installCmd)
-        alert('Install command copied! Paste in your terminal to update.')
     }
 
     if (!isVisible || isDismissed) return null
@@ -70,7 +72,7 @@ export default function UpdateNotifier({ currentVersion }) {
                         className="mt-2 flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-blue-400/30 no-drag"
                     >
                         <Download size={14} className="text-blue-300" />
-                        Update Now
+                        View Release
                     </button>
                 </div>
 
