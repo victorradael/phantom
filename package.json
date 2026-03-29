@@ -2,6 +2,7 @@
   "name": "phantom",
   "productName": "Phantom",
   "version": "2.6.0",
+  "private": true,
   "description": "A silent, focused browser for the shadows.",
   "main": "out/main/index.js",
   "scripts": {
@@ -11,7 +12,8 @@
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:linux": "electron-vite build && electron-builder --linux",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "audit": "yarn npm audit --all"
   },
   "keywords": [
     "electron",
@@ -50,6 +52,7 @@
     "autoprefixer": "^10.4.17",
     "electron": "^40.1.0",
     "electron-builder": "^26.7.0",
+    "electron-builder-squirrel-windows": "26.8.1",
     "electron-vite": "^5.0.0",
     "eslint": "^9.20.0",
     "eslint-plugin-react": "^7.33.2",
@@ -84,5 +87,6 @@
       "out/**/*",
       "resources/**/*"
     ]
-  }
+  },
+  "packageManager": "yarn@4.13.0"
 }
