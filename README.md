@@ -25,8 +25,8 @@ Phantom abandons the standard browser look for a modern native app experience:
 - **Engine**: Electron + Chromium
 - **Frontend**: React + Vite
 - **Styling**: Tailwind CSS (Modern Dark Theme)
-- **Icons**: Lucide Icons + Google/DuckDuckGo Favicon Services
-- **Persistence**: `electron-store` (JSON-based persistence)
+- **Icons**: Lucide Icons + DuckDuckGo Favicon Service
+- **Persistence**: `electron-store` (encrypted via OS keychain)
 
 ## 📦 Getting Started
 
@@ -51,14 +51,24 @@ curl -fsSL https://raw.githubusercontent.com/victorradael/phantom/master/scripts
 - Download the `.deb` or `.AppImage` from the [latest release](https://github.com/victorradael/phantom/releases/latest).
 
 ### For Developers
-1.  **Clone and Install**:
-    ```bash
-    git clone https://github.com/victorradael/phantom
-    cd phantom
-    yarn
-    ```
-2.  **Development**: `yarn dev`
-3.  **Local Build**: `yarn build:linux`
+
+This project uses **Yarn 4** managed via [Corepack](https://yarnpkg.com/corepack), which is bundled with Node.js 16.9+.
+
+**First-time machine setup** (run once per machine):
+```bash
+corepack enable
+corepack install
+```
+
+**Clone and run**:
+```bash
+git clone https://github.com/victorradael/phantom
+cd phantom
+yarn
+```
+
+**Development**: `yarn dev`
+**Local Build**: `yarn build:linux`
 
 ### 🐧 Troubleshooting (Linux)
 If you encounter the `FATAL:setuid_sandbox_host.cc` error when running `yarn dev`, you have two options:

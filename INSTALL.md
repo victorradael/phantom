@@ -15,6 +15,17 @@ The easiest way to install is by downloading the latest version from the GitHub 
 
 ## 🛠️ Generating Installers Locally (Development)
 
+### Prerequisites
+
+This project uses **Yarn 4** via [Corepack](https://yarnpkg.com/corepack). Run these commands once per machine before cloning:
+
+```bash
+corepack enable   # activates corepack as the yarn interceptor
+corepack install  # downloads and caches the Yarn version declared in package.json
+```
+
+> Corepack is included by default in all official Node.js distributions starting from v16.9.
+
 ## 📦 Installation (Ubuntu/Debian)
 
 If you generated or downloaded a `.deb` file, you can install it via terminal:
@@ -63,9 +74,9 @@ rm -rf dist/ out/
 The `install.sh` script (linked in the README) automatically detects if Phantom (or Mini Browser) is already present on the system. If it finds a previous version, it automatically runs the uninstaller before applying the new version, ensuring a clean transition.
 
 ### In-App Notifications
-Phantom now periodically checks for new releases on GitHub. When a newer version is detected:
+Phantom periodically checks for new releases on GitHub. When a newer version is detected:
 1. An elegant **Blue Steel** notification appears in the corner of the screen.
-2. Clicking "Update Now" opens the release link and copies the quick install command to your clipboard for convenience.
+2. Clicking **"View Release"** opens the GitHub release page in your default browser, where you can download the latest `.deb` or `.AppImage`.
 
 ---
 
