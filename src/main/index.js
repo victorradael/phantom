@@ -203,6 +203,79 @@ function createWindow() {
         )
         return true
     })
+
+    // Workspace persistence
+    rateLimitedHandle('get-workspaces', 20, 1000, () => {
+        return store.get('workspaces', [])
+    })
+
+    rateLimitedHandle('save-workspaces', 10, 1000, (_, workspaces) => {
+        store.set('workspaces', workspaces)
+        return true
+    })
+
+    // Links persistence
+    rateLimitedHandle('get-links', 20, 1000, () => {
+        return store.get('links', [])
+    })
+
+    rateLimitedHandle('save-links', 10, 1000, (_, links) => {
+        store.set('links', links)
+        return true
+    })
+
+    // Sync configuration persistence
+    rateLimitedHandle('get-sync-config', 20, 1000, () => {
+        return store.get('syncConfig', { apiUrl: '', lastSynced: null })
+    })
+
+    rateLimitedHandle('save-sync-config', 10, 1000, (_, config) => {
+        store.set('syncConfig', config)
+        return true
+    })
+
+    // Test API connection — runs from main process to avoid CSP restrictions
+    rateLimitedHandle('test-api-connection', 5, 5000, async (_, apiUrl) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/health`, {
+                signal: AbortSignal.timeout(5000)
+            })
+            if (res.ok) return { ok: true }
+            return { ok: false, error: `HTTP ${res.status}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Connection failed' }
+        }
+    })
+
+    // Sync workspace to backend — runs from main process to avoid CSP restrictions
+    rateLimitedHandle('sync-workspace', 3, 10000, async (_, { apiUrl, workspace, links }) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workspace, links }),
+                signal: AbortSignal.timeout(15000)
+            })
+            if (res.ok) {
+                const data = await res.json()
+                return { ok: true, data }
+            }
+            const errorText = await res.text().catch(() => '')
+            return { ok: false, error: `HTTP ${res.status}${errorText ? ': ' + errorText : ''}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Sync failed' }
+        }
+    })
 }
 
 // Global Context Menu (Keep for general usability)

@@ -11,7 +11,19 @@ const api = {
     saveUrls:        (urls) => ipcRenderer.invoke('save-urls', urls),
     getAppVersion:        () => ipcRenderer.invoke('get-app-version'),
     quitApp:              () => ipcRenderer.invoke('quit-app'),          // FIX-2
-    openExternal:    (url) => ipcRenderer.invoke('open-external', url)  // FIX-3/FIX-4
+    openExternal:    (url) => ipcRenderer.invoke('open-external', url), // FIX-3/FIX-4
+    // Workspaces
+    getWorkspaces:               () => ipcRenderer.invoke('get-workspaces'),
+    saveWorkspaces:  (workspaces) => ipcRenderer.invoke('save-workspaces', workspaces),
+    // Links
+    getLinks:                    () => ipcRenderer.invoke('get-links'),
+    saveLinks:           (links) => ipcRenderer.invoke('save-links', links),
+    // Sync config
+    getSyncConfig:               () => ipcRenderer.invoke('get-sync-config'),
+    saveSyncConfig:     (config) => ipcRenderer.invoke('save-sync-config', config),
+    // API operations (run in main process, bypasses renderer CSP)
+    testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
+    syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload)
 }
 
 if (process.contextIsolated) {
