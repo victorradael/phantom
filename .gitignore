@@ -11,3 +11,4 @@ out
 extensions/
 config/
 *.log
+__pycache__/
