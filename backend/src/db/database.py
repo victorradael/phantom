@@ -1,41 +1,27 @@
-from collections.abc import AsyncGenerator
-
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-from sqlalchemy.orm import DeclarativeBase
+import asyncpg
 
 from src.config import settings
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    pool_size=10,
-    max_overflow=20,
-)
-
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    expire_on_commit=False,
-    class_=AsyncSession,
-)
+_pool: asyncpg.Pool | None = None
 
 
-class Base(DeclarativeBase):
-    pass
+async def init_pool() -> None:
+    global _pool
+    _pool = await asyncpg.create_pool(
+        dsn=settings.database_url,
+        min_size=2,
+        max_size=10,
+    )
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+async def close_pool() -> None:
+    global _pool
+    if _pool is not None:
+        await _pool.close()
+        _pool = None
 
 
-async def init_db() -> None:
-    """Create all tables. For production use Alembic migrations instead."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+def get_pool() -> asyncpg.Pool:
+    if _pool is None:
+        raise RuntimeError("Database pool not initialized. Call init_pool() first.")
+    return _pool

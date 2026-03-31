@@ -5,13 +5,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api import workspaces, links, sync
-from src.db.database import init_db
+from src.db.database import init_pool, close_pool
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    await init_db()
+    await init_pool()
     yield
+    await close_pool()
 
 
 app = FastAPI(

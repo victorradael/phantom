@@ -1,8 +1,7 @@
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
-# Install system dependencies for asyncpg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \

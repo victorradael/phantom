@@ -1,27 +1,31 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncpg
 
 from src.models.link import Link
 from src.repositories import link_repo
 from src.schemas.link import LinkCreate, LinkUpdate
 
 
-async def get_all(session: AsyncSession, workspace_id: int | None = None) -> list[Link]:
+async def get_all(
+    pool: asyncpg.Pool, workspace_id: int | None = None
+) -> list[Link]:
     if workspace_id is not None:
-        return await link_repo.get_by_workspace(session, workspace_id)
-    return await link_repo.get_all(session)
+        return await link_repo.get_by_workspace(pool, workspace_id)
+    return await link_repo.get_all(pool)
 
 
-async def get_by_id(session: AsyncSession, link_id: int) -> Link | None:
-    return await link_repo.get_by_id(session, link_id)
+async def get_by_id(pool: asyncpg.Pool, link_id: int) -> Link | None:
+    return await link_repo.get_by_id(pool, link_id)
 
 
-async def create(session: AsyncSession, data: LinkCreate) -> Link:
-    return await link_repo.create(session, data)
+async def create(pool: asyncpg.Pool, data: LinkCreate) -> Link:
+    return await link_repo.create(pool, data)
 
 
-async def update(session: AsyncSession, link: Link, data: LinkUpdate) -> Link:
-    return await link_repo.update(session, link, data)
+async def update(
+    pool: asyncpg.Pool, link_id: int, data: LinkUpdate
+) -> Link | None:
+    return await link_repo.update(pool, link_id, data)
 
 
-async def delete(session: AsyncSession, link: Link) -> None:
-    await link_repo.delete(session, link)
+async def delete(pool: asyncpg.Pool, link_id: int) -> None:
+    await link_repo.delete(pool, link_id)

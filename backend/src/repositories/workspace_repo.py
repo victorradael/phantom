@@ -1,71 +1,79 @@
-import uuid as _uuid
-from datetime import datetime
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncpg
 
 from src.models.workspace import Workspace
 from src.schemas.workspace import WorkspaceCreate, WorkspaceUpdate
 
 
-async def get_all(session: AsyncSession) -> list[Workspace]:
-    result = await session.execute(select(Workspace).order_by(Workspace.id))
-    return list(result.scalars().all())
-
-
-async def get_by_id(session: AsyncSession, workspace_id: int) -> Workspace | None:
-    result = await session.execute(
-        select(Workspace).where(Workspace.id == workspace_id)
+def _to_workspace(row: asyncpg.Record) -> Workspace:
+    return Workspace(
+        id=row["id"],
+        uuid=row["uuid"],
+        name=row["name"],
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
     )
-    return result.scalar_one_or_none()
 
 
-async def get_by_uuid(session: AsyncSession, uuid: str) -> Workspace | None:
-    result = await session.execute(
-        select(Workspace).where(Workspace.uuid == _uuid.UUID(uuid))
+async def get_all(pool: asyncpg.Pool) -> list[Workspace]:
+    rows = await pool.fetch("SELECT * FROM workspaces ORDER BY id")
+    return [_to_workspace(r) for r in rows]
+
+
+async def get_by_id(pool: asyncpg.Pool, workspace_id: int) -> Workspace | None:
+    row = await pool.fetchrow(
+        "SELECT * FROM workspaces WHERE id = $1", workspace_id
     )
-    return result.scalar_one_or_none()
+    return _to_workspace(row) if row else None
 
 
-async def create(session: AsyncSession, data: WorkspaceCreate) -> Workspace:
-    workspace = Workspace(name=data.name)
-    session.add(workspace)
-    await session.commit()
-    await session.refresh(workspace)
-    return workspace
+async def get_by_uuid(pool: asyncpg.Pool, uuid: str) -> Workspace | None:
+    row = await pool.fetchrow(
+        "SELECT * FROM workspaces WHERE uuid = $1::uuid", uuid
+    )
+    return _to_workspace(row) if row else None
+
+
+async def create(pool: asyncpg.Pool, data: WorkspaceCreate) -> Workspace:
+    row = await pool.fetchrow(
+        "INSERT INTO workspaces (name) VALUES ($1) RETURNING *",
+        data.name,
+    )
+    return _to_workspace(row)
 
 
 async def update(
-    session: AsyncSession, workspace: Workspace, data: WorkspaceUpdate
-) -> Workspace:
-    if data.name is not None:
-        workspace.name = data.name
-    workspace.updated_at = datetime.utcnow()
-    session.add(workspace)
-    await session.commit()
-    await session.refresh(workspace)
-    return workspace
+    pool: asyncpg.Pool, workspace_id: int, data: WorkspaceUpdate
+) -> Workspace | None:
+    row = await pool.fetchrow(
+        """
+        UPDATE workspaces
+           SET name       = COALESCE($1, name),
+               updated_at = now()
+         WHERE id = $2
+        RETURNING *
+        """,
+        data.name,
+        workspace_id,
+    )
+    return _to_workspace(row) if row else None
 
 
-async def delete(session: AsyncSession, workspace: Workspace) -> None:
-    await session.delete(workspace)
-    await session.commit()
+async def delete(pool: asyncpg.Pool, workspace_id: int) -> None:
+    await pool.execute("DELETE FROM workspaces WHERE id = $1", workspace_id)
 
 
 async def upsert_by_uuid(
-    session: AsyncSession, uuid: str, name: str
+    pool: asyncpg.Pool, uuid: str, name: str
 ) -> Workspace:
-    existing = await get_by_uuid(session, uuid)
-    if existing:
-        existing.name = name
-        existing.updated_at = datetime.utcnow()
-        session.add(existing)
-        await session.commit()
-        await session.refresh(existing)
-        return existing
-
-    workspace = Workspace(uuid=_uuid.UUID(uuid), name=name)
-    session.add(workspace)
-    await session.commit()
-    await session.refresh(workspace)
-    return workspace
+    row = await pool.fetchrow(
+        """
+        INSERT INTO workspaces (uuid, name)
+             VALUES ($1::uuid, $2)
+        ON CONFLICT (uuid)
+          DO UPDATE SET name = EXCLUDED.name, updated_at = now()
+        RETURNING *
+        """,
+        uuid,
+        name,
+    )
+    return _to_workspace(row)

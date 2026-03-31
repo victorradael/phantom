@@ -5,7 +5,7 @@ Backend de sincronização de workspaces e links para o Phantom.
 ## Requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
-- Python 3.11+ (apenas para desenvolvimento local sem Docker)
+- Python 3.14+ (apenas para desenvolvimento local sem Docker)
 
 ---
 
@@ -55,13 +55,13 @@ docker compose up db -d
 ### 3. Configurar variável de ambiente
 
 ```bash
-export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/phantom
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/phantom
 ```
 
 ### 4. Rodar as migrações
 
 ```bash
-alembic upgrade head
+python migrations/runner.py
 ```
 
 ### 5. Iniciar o servidor
@@ -74,22 +74,28 @@ uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## Migrações (Alembic)
 
+As migrações são gerenciadas com **Alembic** e escritas em SQL puro via `op.execute()`.
+A conexão com o banco durante as migrações usa SQLAlchemy (apenas como driver para o Alembic);
+o acesso ao banco em runtime usa asyncpg diretamente.
+
 ```bash
 # Aplicar todas as migrações pendentes
 alembic upgrade head
 
+# Via Docker Compose
+docker compose run --rm api alembic upgrade head
+
 # Reverter a última migração
 alembic downgrade -1
 
-# Ver histórico de migrações
+# Ver histórico
 alembic history
 
-# Gerar nova migração automaticamente
-alembic revision --autogenerate -m "descrição da mudança"
+# Gerar nova migração (arquivo em branco para preencher manualmente)
+alembic revision -m "descrição da mudança"
 ```
 
-> Em desenvolvimento, `init_db()` cria as tabelas automaticamente na inicialização.
-> Em produção, use sempre `alembic upgrade head`.
+Para adicionar uma migração, edite o arquivo gerado em `alembic/versions/` usando `op.execute("...")` com SQL puro.
 
 ---
 
@@ -259,6 +265,18 @@ backend/
 | `updated_at` | `timestamp` | Última atualização |
 
 ---
+
+## Stack técnica
+
+| Componente | Tecnologia |
+|------------|------------|
+| Runtime | Python 3.14 |
+| Framework | FastAPI |
+| Banco de dados | PostgreSQL 18 |
+| Driver async | asyncpg (direto, sem ORM) |
+| Migrações | Runner próprio + SQL puro |
+| Validação | Pydantic v2 |
+| Modelos de domínio | Python dataclasses |
 
 ## Qualidade de Código
 

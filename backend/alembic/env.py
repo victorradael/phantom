@@ -5,19 +5,23 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from src.db.database import Base
-import src.models  # noqa: F401 — ensure models are registered on Base.metadata
-
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata
+# Migrations are written by hand — no ORM metadata needed for autogenerate.
+target_metadata = None
 
-DATABASE_URL = os.environ.get(
+# Accept both postgresql:// (asyncpg direct) and postgresql+asyncpg:// (SQLAlchemy).
+_raw_url = os.environ.get(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@db:5432/phantom",
+    "postgresql://postgres:postgres@db:5432/phantom",
+)
+DATABASE_URL = (
+    _raw_url
+    if _raw_url.startswith("postgresql+asyncpg://")
+    else _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 )
 
 
@@ -32,19 +36,17 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-async def run_migrations_online() -> None:
-    connectable = create_async_engine(DATABASE_URL)
-
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
-
-
-def do_run_migrations(connection):  # type: ignore[no-untyped-def]
+def _do_run_migrations(connection):  # type: ignore[no-untyped-def]
     context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
+
+
+async def run_migrations_online() -> None:
+    engine = create_async_engine(DATABASE_URL)
+    async with engine.connect() as connection:
+        await connection.run_sync(_do_run_migrations)
+    await engine.dispose()
 
 
 if context.is_offline_mode():

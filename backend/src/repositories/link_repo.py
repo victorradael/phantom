@@ -1,99 +1,112 @@
-import uuid as _uuid
-from datetime import datetime
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncpg
 
 from src.models.link import Link
 from src.schemas.link import LinkCreate, LinkUpdate
 
 
-async def get_all(session: AsyncSession) -> list[Link]:
-    result = await session.execute(select(Link).order_by(Link.id))
-    return list(result.scalars().all())
-
-
-async def get_by_workspace(session: AsyncSession, workspace_id: int) -> list[Link]:
-    result = await session.execute(
-        select(Link).where(Link.workspace_id == workspace_id).order_by(Link.id)
+def _to_link(row: asyncpg.Record) -> Link:
+    return Link(
+        id=row["id"],
+        uuid=row["uuid"],
+        url=row["url"],
+        name=row["name"],
+        description=row["description"],
+        workspace_id=row["workspace_id"],
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
     )
-    return list(result.scalars().all())
 
 
-async def get_by_id(session: AsyncSession, link_id: int) -> Link | None:
-    result = await session.execute(select(Link).where(Link.id == link_id))
-    return result.scalar_one_or_none()
+async def get_all(pool: asyncpg.Pool) -> list[Link]:
+    rows = await pool.fetch("SELECT * FROM links ORDER BY id")
+    return [_to_link(r) for r in rows]
 
 
-async def get_by_uuid(session: AsyncSession, uuid: str) -> Link | None:
-    result = await session.execute(
-        select(Link).where(Link.uuid == _uuid.UUID(uuid))
+async def get_by_workspace(pool: asyncpg.Pool, workspace_id: int) -> list[Link]:
+    rows = await pool.fetch(
+        "SELECT * FROM links WHERE workspace_id = $1 ORDER BY id", workspace_id
     )
-    return result.scalar_one_or_none()
+    return [_to_link(r) for r in rows]
 
 
-async def create(session: AsyncSession, data: LinkCreate) -> Link:
-    link = Link(
-        url=data.url,
-        name=data.name,
-        description=data.description,
-        workspace_id=data.workspace_id,
+async def get_by_id(pool: asyncpg.Pool, link_id: int) -> Link | None:
+    row = await pool.fetchrow("SELECT * FROM links WHERE id = $1", link_id)
+    return _to_link(row) if row else None
+
+
+async def get_by_uuid(pool: asyncpg.Pool, uuid: str) -> Link | None:
+    row = await pool.fetchrow(
+        "SELECT * FROM links WHERE uuid = $1::uuid", uuid
     )
-    session.add(link)
-    await session.commit()
-    await session.refresh(link)
-    return link
+    return _to_link(row) if row else None
 
 
-async def update(session: AsyncSession, link: Link, data: LinkUpdate) -> Link:
-    if data.url is not None:
-        link.url = data.url
-    if data.name is not None:
-        link.name = data.name
-    if data.description is not None:
-        link.description = data.description
-    if data.workspace_id is not None:
-        link.workspace_id = data.workspace_id
-    link.updated_at = datetime.utcnow()
-    session.add(link)
-    await session.commit()
-    await session.refresh(link)
-    return link
+async def create(pool: asyncpg.Pool, data: LinkCreate) -> Link:
+    row = await pool.fetchrow(
+        """
+        INSERT INTO links (url, name, description, workspace_id)
+             VALUES ($1, $2, $3, $4)
+        RETURNING *
+        """,
+        data.url,
+        data.name,
+        data.description,
+        data.workspace_id,
+    )
+    return _to_link(row)
 
 
-async def delete(session: AsyncSession, link: Link) -> None:
-    await session.delete(link)
-    await session.commit()
+async def update(
+    pool: asyncpg.Pool, link_id: int, data: LinkUpdate
+) -> Link | None:
+    row = await pool.fetchrow(
+        """
+        UPDATE links
+           SET url          = COALESCE($1, url),
+               name         = COALESCE($2, name),
+               description  = COALESCE($3, description),
+               workspace_id = COALESCE($4, workspace_id),
+               updated_at   = now()
+         WHERE id = $5
+        RETURNING *
+        """,
+        data.url,
+        data.name,
+        data.description,
+        data.workspace_id,
+        link_id,
+    )
+    return _to_link(row) if row else None
+
+
+async def delete(pool: asyncpg.Pool, link_id: int) -> None:
+    await pool.execute("DELETE FROM links WHERE id = $1", link_id)
 
 
 async def upsert_by_uuid(
-    session: AsyncSession,
+    pool: asyncpg.Pool,
     uuid: str,
     url: str,
     name: str | None,
     description: str | None,
     workspace_id: int,
 ) -> Link:
-    existing = await get_by_uuid(session, uuid)
-    if existing:
-        existing.url = url
-        existing.name = name
-        existing.description = description
-        existing.workspace_id = workspace_id
-        existing.updated_at = datetime.utcnow()
-        session.add(existing)
-        await session.commit()
-        await session.refresh(existing)
-        return existing
-
-    link = Link(
-        uuid=_uuid.UUID(uuid),
-        url=url,
-        name=name,
-        description=description,
-        workspace_id=workspace_id,
+    row = await pool.fetchrow(
+        """
+        INSERT INTO links (uuid, url, name, description, workspace_id)
+             VALUES ($1::uuid, $2, $3, $4, $5)
+        ON CONFLICT (uuid)
+          DO UPDATE SET url          = EXCLUDED.url,
+                        name         = EXCLUDED.name,
+                        description  = EXCLUDED.description,
+                        workspace_id = EXCLUDED.workspace_id,
+                        updated_at   = now()
+        RETURNING *
+        """,
+        uuid,
+        url,
+        name,
+        description,
+        workspace_id,
     )
-    session.add(link)
-    await session.commit()
-    await session.refresh(link)
-    return link
+    return _to_link(row)

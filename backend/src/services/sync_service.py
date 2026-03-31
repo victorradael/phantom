@@ -1,12 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncpg
 
 from src.repositories import link_repo, workspace_repo
 from src.schemas.sync import SyncRequest, SyncResponse
 
 
-async def sync_workspace(session: AsyncSession, request: SyncRequest) -> SyncResponse:
+async def sync_workspace(pool: asyncpg.Pool, request: SyncRequest) -> SyncResponse:
     workspace = await workspace_repo.upsert_by_uuid(
-        session,
+        pool,
         uuid=request.workspace.uuid,
         name=request.workspace.name,
     )
@@ -14,7 +14,7 @@ async def sync_workspace(session: AsyncSession, request: SyncRequest) -> SyncRes
     synced = 0
     for link_data in request.links:
         await link_repo.upsert_by_uuid(
-            session,
+            pool,
             uuid=link_data.uuid,
             url=link_data.url,
             name=link_data.name,
