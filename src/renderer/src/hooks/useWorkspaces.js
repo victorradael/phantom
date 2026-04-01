@@ -47,10 +47,28 @@ export function useWorkspaces() {
 
     const selectedWorkspace = workspaces.find((w) => w.uuid === selectedWorkspaceId) || null
 
+    // Merge workspaces from backend: adds new ones (by uuid), ignores existing
+    const mergeWorkspaces = (remoteWorkspaces) => {
+        setWorkspaces((prev) => {
+            const existingUuids = new Set(prev.map((w) => w.uuid))
+            const incoming = remoteWorkspaces
+                .filter((w) => !existingUuids.has(w.uuid))
+                .map((w) => ({
+                    id: Date.now() + Math.random(),
+                    uuid: w.uuid,
+                    name: w.name,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }))
+            return incoming.length > 0 ? [...prev, ...incoming] : prev
+        })
+    }
+
     return {
         workspaces,
         addWorkspace,
         removeWorkspace,
+        mergeWorkspaces,
         selectedWorkspaceId,
         selectWorkspace: setSelectedWorkspaceId,
         selectedWorkspace,

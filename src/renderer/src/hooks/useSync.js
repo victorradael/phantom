@@ -70,12 +70,20 @@ export function useSync() {
         return result
     }
 
+    const pullSync = async () => {
+        if (!apiUrl || connectionStatus !== 'connected') {
+            return { ok: false, error: 'Not connected to API' }
+        }
+        return await window.api.pullSync(apiUrl)
+    }
+
     return {
         apiUrl,
         setApiUrl,
         connectionStatus,
         testConnection,
         syncWorkspace,
+        pullSync,
         lastSynced,
         syncStatus,
         syncError,

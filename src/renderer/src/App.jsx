@@ -71,6 +71,7 @@ function App() {
         workspaces,
         addWorkspace,
         removeWorkspace,
+        mergeWorkspaces,
         selectedWorkspaceId,
         selectWorkspace,
         selectedWorkspace,
@@ -82,6 +83,7 @@ function App() {
         removeLink,
         removeLinksForWorkspace,
         getLinksForWorkspace,
+        mergeLinks,
         loaded: linksLoaded
     } = useLinks()
 
@@ -91,6 +93,7 @@ function App() {
         connectionStatus,
         testConnection,
         syncWorkspace,
+        pullSync,
         lastSynced,
         syncStatus,
         syncError
@@ -169,9 +172,24 @@ function App() {
         removeWorkspace(uuid)
     }
 
-    const handleSyncWorkspace = () => {
+    const applyPull = async () => {
+        const result = await pullSync()
+        if (result.ok && result.data) {
+            mergeWorkspaces(result.data.workspaces)
+            mergeLinks(result.data.links)
+        }
+    }
+
+    const handleTestConnection = async () => {
+        const result = await testConnection()
+        if (result.ok) applyPull()
+        return result
+    }
+
+    const handleSyncWorkspace = async () => {
         if (!selectedWorkspace) return
-        syncWorkspace(selectedWorkspace, workspaceLinks)
+        await syncWorkspace(selectedWorkspace, workspaceLinks)
+        applyPull()
     }
 
     const cleanUrl = (url) => url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
@@ -318,7 +336,7 @@ function App() {
                     apiUrl={apiUrl}
                     onSetApiUrl={setApiUrl}
                     connectionStatus={connectionStatus}
-                    onTestConnection={testConnection}
+                    onTestConnection={handleTestConnection}
                     onSyncWorkspace={handleSyncWorkspace}
                     selectedWorkspace={selectedWorkspace}
                     linksCount={workspaceLinks.length}

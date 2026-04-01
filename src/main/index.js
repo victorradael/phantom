@@ -252,6 +252,26 @@ function createWindow() {
         }
     })
 
+    // Pull all workspaces and links from backend
+    rateLimitedHandle('pull-sync', 5, 5000, async (_, apiUrl) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/sync`, { signal: AbortSignal.timeout(10000) })
+            if (res.ok) {
+                const data = await res.json()
+                return { ok: true, data }
+            }
+            const errorText = await res.text().catch(() => '')
+            return { ok: false, error: `HTTP ${res.status}${errorText ? ': ' + errorText : ''}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Pull failed' }
+        }
+    })
+
     // Sync workspace to backend — runs from main process to avoid CSP restrictions
     rateLimitedHandle('sync-workspace', 3, 10000, async (_, { apiUrl, workspace, links }) => {
         try {

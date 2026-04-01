@@ -23,7 +23,8 @@ const api = {
     saveSyncConfig:     (config) => ipcRenderer.invoke('save-sync-config', config),
     // API operations (run in main process, bypasses renderer CSP)
     testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
-    syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload)
+    syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),
+    pullSync:            (url) => ipcRenderer.invoke('pull-sync', url)
 }
 
 if (process.contextIsolated) {

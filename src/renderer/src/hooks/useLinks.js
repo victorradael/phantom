@@ -44,5 +44,25 @@ export function useLinks() {
         return links.filter((l) => l.workspaceId === workspaceId)
     }
 
-    return { links, addLink, removeLink, removeLinksForWorkspace, getLinksForWorkspace, loaded }
+    // Merge links from backend: adds new ones (by uuid), ignores existing
+    const mergeLinks = (remoteLinks) => {
+        setLinks((prev) => {
+            const existingUuids = new Set(prev.map((l) => l.uuid))
+            const incoming = remoteLinks
+                .filter((l) => !existingUuids.has(l.uuid))
+                .map((l) => ({
+                    id: Date.now() + Math.random(),
+                    uuid: l.uuid,
+                    url: l.url,
+                    name: l.name || '',
+                    description: l.description || '',
+                    workspaceId: l.workspace_uuid,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }))
+            return incoming.length > 0 ? [...prev, ...incoming] : prev
+        })
+    }
+
+    return { links, addLink, removeLink, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, loaded }
 }
