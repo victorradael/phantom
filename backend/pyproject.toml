@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "phantom-sync-api"
 version = "1.0.0"
 description = "Phantom Workspace Sync API"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
@@ -32,7 +32,7 @@ include = ["src*", "migrations*"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py314"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
@@ -43,6 +43,6 @@ line-length = 88
 target-version = ["py314"]
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
