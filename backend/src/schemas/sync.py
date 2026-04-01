@@ -22,3 +22,21 @@ class SyncResponse(BaseModel):
     workspace_id: int
     synced_links: int
     message: str
+
+
+class PullWorkspaceData(BaseModel):
+    uuid: str
+    name: str
+
+
+class PullLinkData(BaseModel):
+    uuid: str
+    url: str
+    name: str | None = None
+    description: str | None = None
+    workspace_uuid: str
+
+
+class PullResponse(BaseModel):
+    workspaces: list[PullWorkspaceData]
+    links: list[PullLinkData]

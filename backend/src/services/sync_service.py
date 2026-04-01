@@ -1,7 +1,7 @@
 import asyncpg
 
 from src.repositories import link_repo, workspace_repo
-from src.schemas.sync import SyncRequest, SyncResponse
+from src.schemas.sync import PullLinkData, PullResponse, PullWorkspaceData, SyncRequest, SyncResponse
 
 
 async def sync_workspace(pool: asyncpg.Pool, request: SyncRequest) -> SyncResponse:
@@ -27,4 +27,31 @@ async def sync_workspace(pool: asyncpg.Pool, request: SyncRequest) -> SyncRespon
         workspace_id=workspace.id,
         synced_links=synced,
         message=f"Synced workspace '{workspace.name}' with {synced} link(s).",
+    )
+
+
+async def pull_all(pool: asyncpg.Pool) -> PullResponse:
+    workspaces = await workspace_repo.get_all(pool)
+
+    rows = await pool.fetch(
+        """
+        SELECT l.uuid, l.url, l.name, l.description, w.uuid AS workspace_uuid
+          FROM links l
+          JOIN workspaces w ON l.workspace_id = w.id
+         ORDER BY l.id
+        """
+    )
+
+    return PullResponse(
+        workspaces=[PullWorkspaceData(uuid=str(w.uuid), name=w.name) for w in workspaces],
+        links=[
+            PullLinkData(
+                uuid=str(r["uuid"]),
+                url=r["url"],
+                name=r["name"],
+                description=r["description"],
+                workspace_uuid=str(r["workspace_uuid"]),
+            )
+            for r in rows
+        ],
     )
