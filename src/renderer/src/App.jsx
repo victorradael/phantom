@@ -167,9 +167,19 @@ function App() {
         setNewAlias('')
     }
 
+    const handleRemoveLink = (uuid) => {
+        removeLink(uuid)
+        if (connectionStatus === 'connected' && apiUrl) {
+            window.api.deleteSyncedLink({ apiUrl, uuid })
+        }
+    }
+
     const handleRemoveWorkspace = (uuid) => {
         removeLinksForWorkspace(uuid)
         removeWorkspace(uuid)
+        if (connectionStatus === 'connected' && apiUrl) {
+            window.api.deleteSyncedWorkspace({ apiUrl, uuid })
+        }
     }
 
     const applyPull = async () => {
@@ -356,10 +366,10 @@ function App() {
                         dashboardRef.current = el
                         if (el !== dashboardContainer) setDashboardContainer(el)
                     }}
-                    className="h-full w-full p-8 overflow-y-auto min-w-0 font-sans text-gray-100 relative z-10"
+                    className="h-full w-full p-4 sm:p-8 overflow-y-auto min-w-0 font-sans text-gray-100 relative z-10"
                 >
                     <div className="max-w-2xl mx-auto">
-                        <header className="mb-8 flex items-center justify-between draggable">
+                        <header className="mb-8 flex items-center justify-between gap-4 flex-wrap draggable">
                             <h1 className="text-2xl font-bold flex items-center gap-2 relative">
                                 <GhostLogo isHidden={isGhostHidden} onTrigger={handleGhostTrigger} />
                                 <span
@@ -371,6 +381,11 @@ function App() {
                                 >
                                     Phantom
                                 </span>
+                                {appVersion && (
+                                    <span className="text-[10px] text-gray-600 font-normal tracking-widest uppercase select-none">
+                                        v{appVersion}
+                                    </span>
+                                )}
                             </h1>
                             <div className="flex items-center gap-2">
                                 <button
@@ -383,14 +398,14 @@ function App() {
                                     title="Toggle Workspace Sidebar"
                                 >
                                     <Layers size={16} className="text-zinc-400" />
-                                    <span className="text-sm">Workspaces</span>
+                                    <span className="text-sm hidden sm:inline">Workspaces</span>
                                 </button>
                                 <button
                                     onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
                                     className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border border-gray-700 no-drag"
                                 >
                                     <Shield size={16} className="text-zinc-400" />
-                                    <span className="text-sm">Bitwarden</span>
+                                    <span className="text-sm hidden sm:inline">Bitwarden</span>
                                 </button>
                             </div>
                         </header>
@@ -412,26 +427,24 @@ function App() {
                         )}
 
                         {selectedWorkspace && (
-                            <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 mb-8">
+                            <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-200">Add New Link</h2>
                                 <div className="flex flex-col gap-3">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newUrl}
-                                            onChange={(e) => setNewUrl(e.target.value)}
-                                            placeholder="Enter URL (e.g. google.com)"
-                                            className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={newAlias}
-                                            onChange={(e) => setNewAlias(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
-                                            placeholder="Name (optional)"
-                                            className="w-1/3 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
-                                        />
-                                    </div>
+                                    <input
+                                        type="text"
+                                        value={newUrl}
+                                        onChange={(e) => setNewUrl(e.target.value)}
+                                        placeholder="Enter URL (e.g. google.com)"
+                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={newAlias}
+                                        onChange={(e) => setNewAlias(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
+                                        placeholder="Name (optional)"
+                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                                    />
                                     <button
                                         onClick={addLinkToWorkspace}
                                         className="bg-zinc-600 hover:bg-zinc-500 text-white px-6 py-2 rounded-lg font-medium transition-colors w-full flex items-center justify-center gap-2"
@@ -469,7 +482,7 @@ function App() {
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => removeLink(item.uuid)}
+                                            onClick={() => handleRemoveLink(item.uuid)}
                                             className="p-2 text-gray-500 hover:text-red-400 hover:bg-gray-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                             title="Remove"
                                         >
@@ -532,13 +545,8 @@ function App() {
             )}
 
             {/* Watermark Helper */}
-            <div className="fixed bottom-4 left-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-gray-900/50 px-2 py-1 rounded border border-gray-800/50 z-[100]">
+            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-gray-900/50 px-2 py-1 rounded border border-gray-800/50 z-[100]">
                 Ctrl + Q to close
-            </div>
-
-            {/* Version Watermark */}
-            <div className="fixed bottom-4 right-4 text-[10px] text-gray-400 pointer-events-none select-none uppercase tracking-widest bg-gray-900/50 px-2 py-1 rounded border border-gray-800/50 z-[100] opacity-50">
-                v{appVersion}
             </div>
 
             <UpdateNotifier currentVersion={appVersion} />
