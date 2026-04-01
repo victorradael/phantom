@@ -83,6 +83,10 @@ async def delete(pool: asyncpg.Pool, link_id: int) -> None:
     await pool.execute("DELETE FROM links WHERE id = $1", link_id)
 
 
+async def delete_by_uuid(pool: asyncpg.Pool, uuid: str) -> None:
+    await pool.execute("DELETE FROM links WHERE uuid = $1::uuid", uuid)
+
+
 async def upsert_by_uuid(
     pool: asyncpg.Pool,
     uuid: str,

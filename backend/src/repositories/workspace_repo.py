@@ -62,6 +62,10 @@ async def delete(pool: asyncpg.Pool, workspace_id: int) -> None:
     await pool.execute("DELETE FROM workspaces WHERE id = $1", workspace_id)
 
 
+async def delete_by_uuid(pool: asyncpg.Pool, uuid: str) -> None:
+    await pool.execute("DELETE FROM workspaces WHERE uuid = $1::uuid", uuid)
+
+
 async def upsert_by_uuid(
     pool: asyncpg.Pool, uuid: str, name: str
 ) -> Workspace:

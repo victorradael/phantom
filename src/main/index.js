@@ -252,6 +252,42 @@ function createWindow() {
         }
     })
 
+    // Delete a single link from backend
+    rateLimitedHandle('delete-synced-link', 10, 5000, async (_, { apiUrl, uuid }) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/sync/link/${encodeURIComponent(uuid)}`, {
+                method: 'DELETE',
+                signal: AbortSignal.timeout(10000)
+            })
+            return res.ok || res.status === 404 ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Delete failed' }
+        }
+    })
+
+    // Delete a workspace (and cascade links) from backend
+    rateLimitedHandle('delete-synced-workspace', 5, 5000, async (_, { apiUrl, uuid }) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/sync/workspace/${encodeURIComponent(uuid)}`, {
+                method: 'DELETE',
+                signal: AbortSignal.timeout(10000)
+            })
+            return res.ok || res.status === 404 ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Delete failed' }
+        }
+    })
+
     // Pull all workspaces and links from backend
     rateLimitedHandle('pull-sync', 5, 5000, async (_, apiUrl) => {
         try {

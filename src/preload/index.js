@@ -24,7 +24,9 @@ const api = {
     // API operations (run in main process, bypasses renderer CSP)
     testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
     syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),
-    pullSync:            (url) => ipcRenderer.invoke('pull-sync', url)
+    pullSync:               (url) => ipcRenderer.invoke('pull-sync', url),
+    deleteSyncedLink:   (payload) => ipcRenderer.invoke('delete-synced-link', payload),
+    deleteSyncedWorkspace: (payload) => ipcRenderer.invoke('delete-synced-workspace', payload)
 }
 
 if (process.contextIsolated) {

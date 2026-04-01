@@ -30,6 +30,14 @@ async def sync_workspace(pool: asyncpg.Pool, request: SyncRequest) -> SyncRespon
     )
 
 
+async def delete_workspace(pool: asyncpg.Pool, uuid: str) -> None:
+    await workspace_repo.delete_by_uuid(pool, uuid)
+
+
+async def delete_link(pool: asyncpg.Pool, uuid: str) -> None:
+    await link_repo.delete_by_uuid(pool, uuid)
+
+
 async def pull_all(pool: asyncpg.Pool) -> PullResponse:
     workspaces = await workspace_repo.get_all(pool)
 
