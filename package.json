@@ -80,7 +80,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "public/icon.png"
+      "icon": "public/icon.ico"
     },
     "nsis": {
       "artifactName": "Phantom-Setup-${version}.${ext}"
