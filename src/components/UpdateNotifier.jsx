@@ -36,12 +36,12 @@ export default function UpdateNotifier() {
 
     return (
         <div className="fixed bottom-20 right-8 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="brushed-metal group relative flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl border border-blue-400/20 max-w-sm overflow-hidden">
+            <div className="brushed-metal group relative flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl border border-purple-400/20 max-w-sm overflow-hidden">
                 {/* Glow effect */}
-                <div className="absolute inset-0 bg-blue-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                <div className="absolute inset-0 bg-purple-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
 
-                <div className="relative flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-xl shrink-0 border border-blue-400/30">
-                    <Sparkles className="text-blue-300 animate-pulse" size={24} />
+                <div className="relative flex items-center justify-center w-12 h-12 bg-purple-500/20 rounded-xl shrink-0 border border-purple-400/30">
+                    <Sparkles className="text-purple-300 animate-pulse" size={24} />
                 </div>
 
                 <div className="relative flex flex-col min-w-0">
@@ -54,9 +54,9 @@ export default function UpdateNotifier() {
 
                     {downloadProgress !== null && !isDownloaded && (
                         <div className="mt-2 flex flex-col gap-1">
-                            <div className="w-full bg-blue-900/40 rounded-full h-1.5">
+                            <div className="w-full bg-purple-900/40 rounded-full h-1.5">
                                 <div
-                                    className="bg-blue-400 h-1.5 rounded-full transition-all"
+                                    className="bg-purple-400h-1.5 rounded-full transition-all"
                                     style={{ width: `${downloadProgress}%` }}
                                 />
                             </div>
@@ -67,9 +67,9 @@ export default function UpdateNotifier() {
                     {!isDownloaded && downloadProgress === null && (
                         <button
                             onClick={handleDownload}
-                            className="mt-2 flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-blue-400/30 no-drag"
+                            className="mt-2 flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-purple-400/30 no-drag"
                         >
-                            <Download size={14} className="text-blue-300" />
+                            <Download size={14} className="text-purple-300" />
                             Download Update
                         </button>
                     )}

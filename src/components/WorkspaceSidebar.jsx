@@ -158,7 +158,7 @@ export default function WorkspaceSidebar({
                                     }
                                 }}
                                 placeholder="http://localhost:8000"
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-600 no-drag"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
                             />
 
                             <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export default function WorkspaceSidebar({
                                         }
                                     }}
                                     placeholder="Workspace name"
-                                    className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 no-drag"
+                                    className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 no-drag"
                                     autoFocus
                                 />
                                 <button

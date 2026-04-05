@@ -56,12 +56,12 @@ export default function ScrollIndicator({ containerRef, direction = 'vertical', 
         return (
             <>
                 {showStart && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-bounce bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-blue-500/70">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-bounce bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-purple-500/70">
                         <ChevronUp size={20} />
                     </div>
                 )}
                 {showEnd && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-bounce bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-blue-500/70">
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-bounce bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-purple-500/70">
                         <ChevronDown size={20} />
                     </div>
                 )}
@@ -72,12 +72,12 @@ export default function ScrollIndicator({ containerRef, direction = 'vertical', 
     return (
         <>
             {showStart && (
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 pointer-events-none animate-pulse bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-blue-500/70">
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 pointer-events-none animate-pulse bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-purple-500/70">
                     <ChevronLeft size={20} />
                 </div>
             )}
             {showEnd && (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 pointer-events-none animate-pulse bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-blue-500/70">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 pointer-events-none animate-pulse bg-gray-900/40 p-1 rounded-full backdrop-blur-sm border border-gray-700/50 text-purple-500/70">
                     <ChevronRight size={20} />
                 </div>
             )}

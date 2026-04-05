@@ -311,7 +311,7 @@ function App() {
             <div className="flex-1 w-full bg-white relative">
                 {loadError && (
                     <div className="absolute inset-0 z-10 bg-gray-900 flex flex-col items-center justify-center p-8 text-center">
-                        <span className="text-6xl mb-4 opacity-50">👻</span>
+                        <img src="/icon.png" alt="Phantom" className="w-16 h-16 mb-4 opacity-50" />
                         <h2 className="text-xl font-bold text-gray-100 mb-2">The Phantom cannot reach this realm.</h2>
                         <p className="text-gray-400 max-w-md mb-6">{loadError}</p>
                         <button
@@ -435,7 +435,7 @@ function App() {
                                         value={newUrl}
                                         onChange={(e) => setNewUrl(e.target.value)}
                                         placeholder="Enter URL (e.g. google.com)"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <input
                                         type="text"
@@ -443,7 +443,7 @@ function App() {
                                         onChange={(e) => setNewAlias(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
                                         placeholder="Name (optional)"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <button
                                         onClick={addLinkToWorkspace}
@@ -460,7 +460,7 @@ function App() {
                                 {workspaceLinks.map((item) => (
                                     <div
                                         key={item.uuid}
-                                        className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between group hover:border-blue-500/50 transition-colors w-full min-w-0"
+                                        className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
                                     >
                                         <div
                                             className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
