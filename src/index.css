@@ -5,11 +5,11 @@
 :root {
   /* Darker monochromatic palette to match low-poly icon */
   --metal-bg: linear-gradient(135deg,
-      #3f3f46 0%,
-      #27272a 25%,
-      #18181b 50%,
-      #09090b 75%,
-      #3f3f46 100%);
+      #2d1b4e 0%,
+      #1a0f2e 25%,
+      #0d0a14 50%,
+      #060408 75%,
+      #2d1b4e 100%);
   --metal-shine: linear-gradient(90deg,
       transparent 0%,
       rgba(161, 161, 170, 0) 40%,
@@ -20,7 +20,7 @@
 
 body {
   margin: 0;
-  background-color: #09090b;
+  background-color: #0d0a14;
   /* zinc-950 - almost black */
   color: #fafafa;
   /* zinc-50 */

@@ -109,9 +109,9 @@ export default function WorkspaceSidebar({
     const canSync = isConnected && selectedWorkspace
 
     return (
-        <div className="flex flex-col h-full bg-gray-900 border-r border-gray-700 w-64 shrink-0 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#0d0a14] border-r border-purple-900/40 w-64 shrink-0 overflow-y-auto">
             {/* Header */}
-            <div className="h-10 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-3 shrink-0 draggable">
+            <div className="h-10 bg-[#1a0f2e] border-b border-purple-900/40 flex items-center justify-between px-3 shrink-0 draggable">
                 <span className="text-sm font-semibold text-gray-200 flex items-center gap-2">
                     <Layers size={14} className="text-zinc-400" /> Workspaces
                 </span>
@@ -125,9 +125,9 @@ export default function WorkspaceSidebar({
             </div>
 
             {/* API Configuration Section */}
-            <div className="border-b border-gray-700">
+            <div className="border-b border-purple-900/30">
                 <button
-                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:bg-gray-800 transition-colors no-drag"
+                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:bg-purple-900/20 transition-colors no-drag"
                     onClick={() => setApiSectionOpen(!apiSectionOpen)}
                 >
                     <span className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function WorkspaceSidebar({
                 {apiSectionOpen && (
                     <div className="px-3 pb-3 space-y-2">
                         {!apiUrl && (
-                            <p className="text-xs text-gray-500 bg-gray-800 rounded-lg p-2 leading-relaxed">
+                            <p className="text-xs text-gray-500 bg-[#1a0f2e] rounded-lg p-2 leading-relaxed">
                                 Configure an API URL to enable workspace synchronization.
                             </p>
                         )}
@@ -158,14 +158,14 @@ export default function WorkspaceSidebar({
                                     }
                                 }}
                                 placeholder="http://localhost:8000"
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
+                                className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
                             />
 
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleTestConnection}
                                     disabled={!localApiUrl || connectionStatus === 'testing'}
-                                    className="flex-1 text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 rounded-lg transition-colors flex items-center justify-center gap-1 no-drag"
+                                    className="flex-1 text-xs px-3 py-1.5 bg-purple-900/40 hover:bg-purple-800/40 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 rounded-lg transition-colors flex items-center justify-center gap-1 no-drag"
                                 >
                                     {connectionStatus === 'testing' ? (
                                         <><Loader size={10} className="animate-spin" /> Testing...</>
@@ -189,7 +189,7 @@ export default function WorkspaceSidebar({
             {/* Workspace Management Section */}
             <div className="border-b border-gray-700 flex-1">
                 <button
-                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:bg-gray-800 transition-colors no-drag"
+                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:bg-purple-900/20 transition-colors no-drag"
                     onClick={() => setWorkspaceSectionOpen(!workspaceSectionOpen)}
                 >
                     <span className="flex items-center gap-2">
@@ -210,8 +210,8 @@ export default function WorkspaceSidebar({
                                 key={ws.uuid}
                                 className={`flex items-center justify-between rounded-lg px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
                                     selectedWorkspaceId === ws.uuid
-                                        ? 'bg-zinc-700 text-white'
-                                        : 'hover:bg-gray-800 text-gray-300'
+                                        ? 'bg-purple-800/50 text-white'
+                                        : 'hover:bg-purple-900/30 text-gray-300'
                                 }`}
                                 onClick={() => onSelectWorkspace(ws.uuid)}
                             >
@@ -245,12 +245,12 @@ export default function WorkspaceSidebar({
                                         }
                                     }}
                                     placeholder="Workspace name"
-                                    className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 no-drag"
+                                    className="flex-1 bg-[#0d0a14] border border-purple-900/40 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 no-drag"
                                     autoFocus
                                 />
                                 <button
                                     onClick={handleAddWorkspace}
-                                    className="p-1 bg-zinc-600 hover:bg-zinc-500 rounded text-white no-drag"
+                                    className="p-1 bg-purple-700 hover:bg-purple-600 rounded text-white no-drag"
                                 >
                                     <Plus size={12} />
                                 </button>
@@ -258,7 +258,7 @@ export default function WorkspaceSidebar({
                         ) : (
                             <button
                                 onClick={() => setShowNewWorkspaceInput(true)}
-                                className="w-full flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded-lg transition-colors mt-1 no-drag"
+                                className="w-full flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-200 hover:bg-purple-900/20 rounded-lg transition-colors mt-1 no-drag"
                             >
                                 <Plus size={12} /> New Workspace
                             </button>
@@ -294,7 +294,7 @@ export default function WorkspaceSidebar({
                         <button
                             onClick={handleSync}
                             disabled={syncStatus === 'syncing'}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-zinc-600 hover:bg-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors no-drag"
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors no-drag"
                         >
                             <RefreshCw size={12} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
                             Sync "{selectedWorkspace.name}"

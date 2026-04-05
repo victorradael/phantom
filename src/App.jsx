@@ -262,11 +262,11 @@ function App() {
 
     const renderBrowser = () => (
         <div className="flex-1 flex flex-col h-full relative overflow-hidden">
-            <div className="h-10 bg-gray-900 border-b border-gray-700 flex items-center px-4 justify-between draggable shrink-0">
+            <div className="h-10 bg-[#0d0a14] border-b border-purple-900/40 flex items-center px-4 justify-between draggable shrink-0">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                     <button
                         onClick={() => { setCurrentUrl(''); setLoadError(null) }}
-                        className="p-1.5 hover:bg-gray-700 rounded text-gray-300 no-drag shrink-0"
+                        className="p-1.5 hover:bg-purple-900/30 rounded text-gray-300 no-drag shrink-0"
                         title="Back to Dashboard"
                     >
                         <ArrowLeft size={16} />
@@ -288,21 +288,21 @@ function App() {
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
-                        className={`p-1.5 rounded no-drag ${isWorkspaceSidebarOpen ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 text-gray-400'}`}
+                        className={`p-1.5 rounded no-drag ${isWorkspaceSidebarOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Workspace Sidebar"
                     >
                         <Layers size={16} />
                     </button>
                     <button
                         onClick={toggleAlwaysOnTop}
-                        className={`p-1.5 rounded no-drag ${isAlwaysOnTop ? 'bg-zinc-600 text-white' : 'hover:bg-gray-700 text-gray-400'}`}
+                        className={`p-1.5 rounded no-drag ${isAlwaysOnTop ? 'bg-purple-700/60 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Always on Top"
                     >
                         {isAlwaysOnTop ? <Pin size={16} /> : <PinOff size={16} />}
                     </button>
                     <button
                         onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
-                        className={`p-1.5 rounded no-drag ${isBitwardenOpen ? 'bg-gray-700 text-white' : 'hover:bg-gray-700 text-gray-400'}`}
+                        className={`p-1.5 rounded no-drag ${isBitwardenOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Bitwarden Sidebar"
                     >
                         {isBitwardenOpen ? <SidebarClose size={16} /> : <Shield size={16} />}
@@ -311,13 +311,13 @@ function App() {
             </div>
             <div className="flex-1 w-full bg-white relative">
                 {loadError && (
-                    <div className="absolute inset-0 z-10 bg-gray-900 flex flex-col items-center justify-center p-8 text-center">
+                    <div className="absolute inset-0 z-10 bg-[#0d0a14] flex flex-col items-center justify-center p-8 text-center">
                         <img src={iconSrc} alt="Phantom" className="w-16 h-16 mb-4 opacity-50" />
                         <h2 className="text-xl font-bold text-gray-100 mb-2">The Phantom cannot reach this realm.</h2>
                         <p className="text-gray-400 max-w-md mb-6">{loadError}</p>
                         <button
                             onClick={() => { const wv = webviewRef.current; if (wv) wv.reload() }}
-                            className="px-6 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg transition-colors font-medium"
+                            className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-lg transition-colors font-medium"
                         >
                             Try Again
                         </button>
@@ -359,7 +359,7 @@ function App() {
             )}
 
             {/* Main Dashboard Area */}
-            <div className="flex-1 relative overflow-hidden bg-gray-900 transition-colors duration-500">
+            <div className="flex-1 relative overflow-hidden bg-[#0d0a14] transition-colors duration-500">
                 <InteractiveBackground />
                 <ScrollIndicator containerRef={dashboardContainer} watch={[workspaceLinks]} />
                 <div
@@ -393,8 +393,8 @@ function App() {
                                     onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
                                     className={`p-2 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border no-drag ${
                                         isWorkspaceSidebarOpen
-                                            ? 'bg-gray-700 border-gray-600'
-                                            : 'bg-gray-800 hover:bg-gray-700 border-gray-700'
+                                            ? 'bg-purple-800/40 border-purple-700/40'
+                                            : 'bg-[#1a0f2e] hover:bg-purple-900/30 border-purple-900/40'
                                     }`}
                                     title="Toggle Workspace Sidebar"
                                 >
@@ -403,7 +403,7 @@ function App() {
                                 </button>
                                 <button
                                     onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
-                                    className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border border-gray-700 no-drag"
+                                    className="p-2 bg-[#1a0f2e] hover:bg-purple-900/30 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border border-purple-900/40 no-drag"
                                 >
                                     <Shield size={16} className="text-zinc-400" />
                                     <span className="text-sm hidden sm:inline">Bitwarden</span>
@@ -421,14 +421,14 @@ function App() {
                         )}
 
                         {!selectedWorkspace && (
-                            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center text-gray-500 mb-8">
+                            <div className="bg-[#1a0f2e] border border-purple-900/30 rounded-xl p-6 text-center text-gray-500 mb-8">
                                 <Layers size={24} className="mx-auto mb-2 text-gray-600" />
                                 <p className="text-sm">No workspace selected. Create one in the sidebar to get started.</p>
                             </div>
                         )}
 
                         {selectedWorkspace && (
-                            <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8">
+                            <div className="bg-[#1a0f2e] p-4 sm:p-6 rounded-xl shadow-lg border border-purple-900/30 mb-8">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-200">Add New Link</h2>
                                 <div className="flex flex-col gap-3">
                                     <input
@@ -436,7 +436,7 @@ function App() {
                                         value={newUrl}
                                         onChange={(e) => setNewUrl(e.target.value)}
                                         placeholder="Enter URL (e.g. google.com)"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
+                                        className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <input
                                         type="text"
@@ -444,11 +444,11 @@ function App() {
                                         onChange={(e) => setNewAlias(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
                                         placeholder="Name (optional)"
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
+                                        className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <button
                                         onClick={addLinkToWorkspace}
-                                        className="bg-zinc-600 hover:bg-zinc-500 text-white px-6 py-2 rounded-lg font-medium transition-colors w-full flex items-center justify-center gap-2"
+                                        className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-colors w-full flex items-center justify-center gap-2"
                                     >
                                         <Plus size={16} /> Add Link
                                     </button>
@@ -461,7 +461,7 @@ function App() {
                                 {workspaceLinks.map((item) => (
                                     <div
                                         key={item.uuid}
-                                        className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
+                                        className="bg-[#1a0f2e] p-4 rounded-xl border border-purple-900/30 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
                                     >
                                         <div
                                             className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
@@ -470,7 +470,7 @@ function App() {
                                                 if (safe) setCurrentUrl(safe)
                                             }}
                                         >
-                                            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center shrink-0 border border-gray-700 overflow-hidden">
+                                            <div className="w-10 h-10 bg-[#0d0a14] rounded-lg flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
                                                 <PageIcon url={item.url} />
                                             </div>
                                             <div className="min-w-0 truncate">
@@ -484,7 +484,7 @@ function App() {
                                         </div>
                                         <button
                                             onClick={() => handleRemoveLink(item.uuid)}
-                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-gray-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                             title="Remove"
                                         >
                                             <Trash2 size={18} />
@@ -506,7 +506,7 @@ function App() {
     )
 
     return (
-        <div className={`flex h-screen w-screen overflow-hidden bg-gray-900 border border-gray-700 relative ${isResizing ? 'cursor-col-resize' : 'cursor-default'}`}>
+        <div className={`flex h-screen w-screen overflow-hidden bg-[#0d0a14] border border-purple-900/30 relative ${isResizing ? 'cursor-col-resize' : 'cursor-default'}`}>
             {/* Global Invisible Drag Handle */}
             <div className="fixed top-0 left-0 right-0 h-1 z-[9999] draggable pointer-events-none"></div>
 
@@ -516,14 +516,14 @@ function App() {
             {/* Bitwarden Sidebar */}
             {isBitwardenOpen && (
                 <div
-                    className="border-l border-gray-700 flex flex-col bg-white shrink-0 shadow-xl z-50 relative"
+                    className="border-l border-purple-900/40 flex flex-col bg-white shrink-0 shadow-xl z-50 relative"
                     style={{ width: `${sidebarWidth}px` }}
                 >
                     <div
-                        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-zinc-500 transition-colors z-50"
+                        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-purple-700/50 transition-colors z-50"
                         onMouseDown={() => setIsResizing(true)}
                     ></div>
-                    <div className="h-10 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-3 shrink-0 draggable">
+                    <div className="h-10 bg-[#1a0f2e] border-b border-purple-900/40 flex items-center justify-between px-3 shrink-0 draggable">
                         <span className="text-sm font-semibold text-gray-200 flex items-center gap-2">
                             <Shield size={14} className="text-zinc-400" /> Bitwarden Vault
                         </span>
@@ -546,7 +546,7 @@ function App() {
             )}
 
             {/* Watermark Helper */}
-            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-gray-900/50 px-2 py-1 rounded border border-gray-800/50 z-[100]">
+            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-[#0d0a14]/80 px-2 py-1 rounded border border-purple-900/20 z-[100]">
                 Ctrl + Q to close
             </div>
 
