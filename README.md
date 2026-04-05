@@ -16,7 +16,7 @@ Phantom abandons the standard browser look for a modern native app experience:
 - **Always on Top**: Pin the window over other apps with a single click for continuous reference.
 - **Bitwarden Sidebar**: Integrated password manager via a resizable sidebar.
 - **Elegant Error Handling**: Custom error screen for failed connections or invalid URLs.
-- **Automatic Updates**: Visual notification in "Blue Steel" style that warns about new versions and facilitates download.
+- **Automatic Updates**: Detects new versions on startup and offers in-app download and install without leaving the app.
 - **Quick Shortcuts**: Instantly close the application with `Ctrl + Q`.
 
 ---
@@ -69,41 +69,6 @@ yarn
 
 **Development**: `yarn dev`
 **Local Build**: `yarn build:linux`
-
-### 🐧 Troubleshooting (Linux)
-If you encounter the `FATAL:setuid_sandbox_host.cc` error when running `yarn dev`, you have two options:
-
-#### 1. Quick Fix (Bypass)
-Run the command ignoring the sandbox:
-```bash
-yarn dev:no-sandbox
-```
-
-#### 2. Definitive Solution (Kernel Permissions)
-The error occurs because many Linux distributions disable "unprivileged user namespaces" for security. You can enable it temporarily:
-```bash
-sudo sysctl -w kernel.unprivileged_userns_clone=1
-```
-Or make it permanent by adding `kernel.unprivileged_userns_clone=1` to `/etc/sysctl.d/99-sysctl.conf`.
-
-#### 3. Advanced Diagnosis
-If the error persists after the above step, check these points:
-
-*   **Namespace Limit**: Check if the limit is not zero:
-    ```bash
-    sysctl user.max_user_namespaces
-    ```
-    (Ideally greater than 10000).
-*   **AppArmor Restrictions (Ubuntu 24.04+)**: Some distros block namespaces for unprofiled apps:
-    ```bash
-    # To test if AppArmor is blocking:
-    sudo dmesg | grep apparmor | grep -i "sandbox"
-    # To disable the restriction (temporary):
-    sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-    ```
-
-> [!CAUTION]
-> **Security**: Disabling the sandbox or changing Kernel parameters reduces system isolation. Consult the [Installation Guide](INSTALL.md#security-considerations) to understand the implications before applying these changes permanently.
 
 ---
 
