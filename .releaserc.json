@@ -18,10 +18,10 @@
     }],
     ["@semantic-release/github", {
       "assets": [
-        { "path": "dist/*.AppImage", "label": "Linux AppImage" },
-        { "path": "dist/*.deb", "label": "Linux Debian" },
-        { "path": "dist/*.yml", "label": "Update metadata" },
-        { "path": "dist/*.blockmap", "label": "Delta blockmap" }
+        { "path": "dist-release/*.AppImage", "label": "Linux AppImage" },
+        { "path": "dist-release/*.deb", "label": "Linux Debian" },
+        { "path": "dist-release/*.yml", "label": "Update metadata" },
+        { "path": "dist-release/*.blockmap", "label": "Delta blockmap" }
       ]
     }]
   ]

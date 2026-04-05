@@ -73,7 +73,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:^7.28.0, @babel/core@npm:^7.28.4":
+"@babel/core@npm:^7.28.0":
   version: 7.29.0
   resolution: "@babel/core@npm:7.29.0"
   dependencies:
@@ -201,17 +201,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-arrow-functions@npm:^7.27.1":
-  version: 7.27.1
-  resolution: "@babel/plugin-transform-arrow-functions@npm:7.27.1"
-  dependencies:
-    "@babel/helper-plugin-utils": "npm:^7.27.1"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 10c0/19abd7a7d11eef58c9340408a4c2594503f6c4eaea1baa7b0e5fbdda89df097e50663edb3448ad2300170b39efca98a75e5767af05cad3b0facb4944326896a3
-  languageName: node
-  linkType: hard
-
 "@babel/plugin-transform-react-jsx-self@npm:^7.27.1":
   version: 7.27.1
   resolution: "@babel/plugin-transform-react-jsx-self@npm:7.27.1"
@@ -287,34 +276,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron-toolkit/eslint-config@npm:^1.0.1":
-  version: 1.0.2
-  resolution: "@electron-toolkit/eslint-config@npm:1.0.2"
-  peerDependencies:
-    eslint: ">= 8.0.0"
-  checksum: 10c0/078d67a8898c26100fd85568b5416521066434279c14525802ee7456c7fb3433177e5d531a62ea2d8ec9a63e61f86f17dd492b4d1162651225db5c4dafe67e45
-  languageName: node
-  linkType: hard
-
-"@electron-toolkit/preload@npm:^3.0.0":
-  version: 3.0.2
-  resolution: "@electron-toolkit/preload@npm:3.0.2"
-  peerDependencies:
-    electron: ">=13.0.0"
-  checksum: 10c0/aee97d7ebb49b1e5c97afc988e69b283482cd55643e70c05c9783190f22b482c3187df25ecc066a83f7a29d741ffae8159182195906fedee8f4f7dc85b2cb98d
-  languageName: node
-  linkType: hard
-
-"@electron-toolkit/utils@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@electron-toolkit/utils@npm:3.0.0"
-  peerDependencies:
-    electron: ">=13.0.0"
-  checksum: 10c0/b9cb3da36fec97b1a8e2344283da8a78c77d7fb27d09bcf60ca0947db246460a8d05f12cd25bc1c764211443caa58684656e197f9fa3f587a9a5589ec9cf74de
-  languageName: node
-  linkType: hard
-
-"@electron/asar@npm:3.4.1, @electron/asar@npm:^3.2.1, @electron/asar@npm:^3.3.1":
+"@electron/asar@npm:3.4.1, @electron/asar@npm:^3.3.1":
   version: 3.4.1
   resolution: "@electron/asar@npm:3.4.1"
   dependencies:
@@ -444,21 +406,6 @@ __metadata:
     minimatch: "npm:^9.0.3"
     plist: "npm:^3.1.0"
   checksum: 10c0/346b23298d4f175dc50d9b91277d8e4c30017215e1a78c985ce917cd793fc0600084d62a84f485229d781ddfeb5829b6c1125c0bda131ddb9146522d305e92aa
-  languageName: node
-  linkType: hard
-
-"@electron/windows-sign@npm:^1.1.2":
-  version: 1.2.2
-  resolution: "@electron/windows-sign@npm:1.2.2"
-  dependencies:
-    cross-dirname: "npm:^0.1.0"
-    debug: "npm:^4.3.4"
-    fs-extra: "npm:^11.1.1"
-    minimist: "npm:^1.2.8"
-    postject: "npm:^1.0.0-alpha.6"
-  bin:
-    electron-windows-sign: bin/electron-windows-sign.js
-  checksum: 10c0/5a467e1a368e24d40f60e593ea607fb945cd5adaf799318cdf3e086871be87bfb317aeabd39cb4f1a0f455d87c9111b7f2fd41a1eca24e9863b79dc10aca6386
   languageName: node
   linkType: hard
 
@@ -827,7 +774,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/sourcemap-codec@npm:^1.4.14, @jridgewell/sourcemap-codec@npm:^1.5.0, @jridgewell/sourcemap-codec@npm:^1.5.5":
+"@jridgewell/sourcemap-codec@npm:^1.4.14, @jridgewell/sourcemap-codec@npm:^1.5.0":
   version: 1.5.5
   resolution: "@jridgewell/sourcemap-codec@npm:1.5.5"
   checksum: 10c0/f9e538f302b63c0ebc06eecb1dd9918dd4289ed36147a0ddce35d6ea4d7ebbda243cda7b2213b6a5e1d8087a298d5cf630fb2bd39329cdecb82017023f6081a0
@@ -2083,53 +2030,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-builder-lib@npm:26.8.1":
-  version: 26.8.1
-  resolution: "app-builder-lib@npm:26.8.1"
-  dependencies:
-    "@develar/schema-utils": "npm:~2.6.5"
-    "@electron/asar": "npm:3.4.1"
-    "@electron/fuses": "npm:^1.8.0"
-    "@electron/get": "npm:^3.0.0"
-    "@electron/notarize": "npm:2.5.0"
-    "@electron/osx-sign": "npm:1.3.3"
-    "@electron/rebuild": "npm:^4.0.3"
-    "@electron/universal": "npm:2.0.3"
-    "@malept/flatpak-bundler": "npm:^0.4.0"
-    "@types/fs-extra": "npm:9.0.13"
-    async-exit-hook: "npm:^2.0.1"
-    builder-util: "npm:26.8.1"
-    builder-util-runtime: "npm:9.5.1"
-    chromium-pickle-js: "npm:^0.2.0"
-    ci-info: "npm:4.3.1"
-    debug: "npm:^4.3.4"
-    dotenv: "npm:^16.4.5"
-    dotenv-expand: "npm:^11.0.6"
-    ejs: "npm:^3.1.8"
-    electron-publish: "npm:26.8.1"
-    fs-extra: "npm:^10.1.0"
-    hosted-git-info: "npm:^4.1.0"
-    isbinaryfile: "npm:^5.0.0"
-    jiti: "npm:^2.4.2"
-    js-yaml: "npm:^4.1.0"
-    json5: "npm:^2.2.3"
-    lazy-val: "npm:^1.0.5"
-    minimatch: "npm:^10.0.3"
-    plist: "npm:3.1.0"
-    proper-lockfile: "npm:^4.1.2"
-    resedit: "npm:^1.7.0"
-    semver: "npm:~7.7.3"
-    tar: "npm:^7.5.7"
-    temp-file: "npm:^3.4.0"
-    tiny-async-pool: "npm:1.3.0"
-    which: "npm:^5.0.0"
-  peerDependencies:
-    dmg-builder: 26.8.1
-    electron-builder-squirrel-windows: 26.8.1
-  checksum: 10c0/06e2c12bf3f65ed707a5eef6f711b738c19cc62d63ea52260ddd943b9ac882ea8bc37989bca189c9f0782fdd963c1240df84ae249e9403ac7d8c2279667c2ab2
-  languageName: node
-  linkType: hard
-
 "app-builder-lib@npm:26.8.2":
   version: 26.8.2
   resolution: "app-builder-lib@npm:26.8.2"
@@ -2573,13 +2473,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cac@npm:^6.7.14":
-  version: 6.7.14
-  resolution: "cac@npm:6.7.14"
-  checksum: 10c0/4ee06aaa7bab8981f0d54e5f5f9d4adcd64058e9697563ce336d8a3878ed018ee18ebe5359b2430eceae87e0758e62ea2019c3f52ae6e211b1bd2e133856cd10
-  languageName: node
-  linkType: hard
-
 "cacache@npm:^19.0.1":
   version: 19.0.1
   resolution: "cacache@npm:19.0.1"
@@ -2964,13 +2857,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^9.4.0":
-  version: 9.5.0
-  resolution: "commander@npm:9.5.0"
-  checksum: 10c0/5f7784fbda2aaec39e89eb46f06a999e00224b3763dc65976e05929ec486e174fe9aac2655f03ba6a5e83875bd173be5283dc19309b7c65954701c02025b3c1d
-  languageName: node
-  linkType: hard
-
 "common-ancestor-path@npm:^2.0.0":
   version: 2.0.0
   resolution: "common-ancestor-path@npm:2.0.0"
@@ -3117,13 +3003,6 @@ __metadata:
   dependencies:
     buffer: "npm:^5.1.0"
   checksum: 10c0/1a0da36e5f95b19cd2a7b2eab5306a08f1c47bdd22da6f761ab764e2222e8e90a877398907cea94108bd5e41a6d311ea84d7914eaca67da2baa4050bd6384b3d
-  languageName: node
-  linkType: hard
-
-"cross-dirname@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "cross-dirname@npm:0.1.0"
-  checksum: 10c0/8924ce043e5d385929985fdcb1933cf9ca6a3e77b58d024ba396a8721d6044de14837651a785ef36af2b380ceea403699095cec802c25024420389299e62a123
   languageName: node
   linkType: hard
 
@@ -3448,17 +3327,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-builder-squirrel-windows@npm:26.8.1":
-  version: 26.8.1
-  resolution: "electron-builder-squirrel-windows@npm:26.8.1"
-  dependencies:
-    app-builder-lib: "npm:26.8.1"
-    builder-util: "npm:26.8.1"
-    electron-winstaller: "npm:5.4.0"
-  checksum: 10c0/5a055928f129c46ec1308f9e786ff3650ec5721143ffdbb4ff139e4ac59ab2f90646e0e3b49c1b97fec346ad34eccc0f4e5cbb4d0f921de17ab7fef9f2672c88
-  languageName: node
-  linkType: hard
-
 "electron-builder@npm:^26.7.0":
   version: 26.8.2
   resolution: "electron-builder@npm:26.8.2"
@@ -3526,45 +3394,6 @@ __metadata:
     semver: "npm:~7.7.3"
     tiny-typed-emitter: "npm:^2.1.0"
   checksum: 10c0/82c86e5e13e3be7e81790367f6aa417db1a1b8657569c800bbc366259ff80c13101ffca88d5f69a54161e69311b31f116289d7805aff0c197d31af6a6e1c1947
-  languageName: node
-  linkType: hard
-
-"electron-vite@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "electron-vite@npm:5.0.0"
-  dependencies:
-    "@babel/core": "npm:^7.28.4"
-    "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
-    cac: "npm:^6.7.14"
-    esbuild: "npm:^0.25.11"
-    magic-string: "npm:^0.30.19"
-    picocolors: "npm:^1.1.1"
-  peerDependencies:
-    "@swc/core": ^1.0.0
-    vite: ^5.0.0 || ^6.0.0 || ^7.0.0
-  peerDependenciesMeta:
-    "@swc/core":
-      optional: true
-  bin:
-    electron-vite: bin/electron-vite.js
-  checksum: 10c0/e7797910b23f23f39c12ded92d07d7164c5c6adab294aa13278c1b49ada3b12868b13ace8546d2656db4dbab89978cf8368a659d1ce6a2fb9f1aeddb1c8de557
-  languageName: node
-  linkType: hard
-
-"electron-winstaller@npm:5.4.0":
-  version: 5.4.0
-  resolution: "electron-winstaller@npm:5.4.0"
-  dependencies:
-    "@electron/asar": "npm:^3.2.1"
-    "@electron/windows-sign": "npm:^1.1.2"
-    debug: "npm:^4.1.1"
-    fs-extra: "npm:^7.0.1"
-    lodash: "npm:^4.17.21"
-    temp: "npm:^0.9.0"
-  dependenciesMeta:
-    "@electron/windows-sign":
-      optional: true
-  checksum: 10c0/57e705060adefe7c307d6be0ae1931d2c74e58622eac725c335ba1eff126ceb1516d75aedae5ec64953053f63a9330d67abe39e3530524fedbacaa32169f544a
   languageName: node
   linkType: hard
 
@@ -4425,17 +4254,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^7.0.1":
-  version: 7.0.1
-  resolution: "fs-extra@npm:7.0.1"
-  dependencies:
-    graceful-fs: "npm:^4.1.2"
-    jsonfile: "npm:^4.0.0"
-    universalify: "npm:^0.1.0"
-  checksum: 10c0/1943bb2150007e3739921b8d13d4109abdc3cc481e53b97b7ea7f77eda1c3c642e27ae49eac3af074e3496ea02fde30f411ef410c760c70a38b92e656e5da784
-  languageName: node
-  linkType: hard
-
 "fs-extra@npm:^8.1.0":
   version: 8.1.0
   resolution: "fs-extra@npm:8.1.0"
@@ -4698,7 +4516,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.1.3, glob@npm:^7.1.6":
+"glob@npm:^7.1.6":
   version: 7.2.3
   resolution: "glob@npm:7.2.3"
   dependencies:
@@ -6024,7 +5842,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.15, lodash@npm:^4.17.21, lodash@npm:^4.17.4":
+"lodash@npm:^4.17.15, lodash@npm:^4.17.4":
   version: 4.17.23
   resolution: "lodash@npm:4.17.23"
   checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
@@ -6097,15 +5915,6 @@ __metadata:
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0
   checksum: 10c0/3253675fa2225f742c3f66423445551fa4b973108951fd161d41c494ff60d388cc2d36ed3f76c4677a988bf9f1e127ce40d4a957f38bf355300906f29e67523b
-  languageName: node
-  linkType: hard
-
-"magic-string@npm:^0.30.19":
-  version: 0.30.21
-  resolution: "magic-string@npm:0.30.21"
-  dependencies:
-    "@jridgewell/sourcemap-codec": "npm:^1.5.5"
-  checksum: 10c0/299378e38f9a270069fc62358522ddfb44e94244baa0d6a8980ab2a9b2490a1d03b236b447eee309e17eb3bddfa482c61259d47960eb018a904f0ded52780c4a
   languageName: node
   linkType: hard
 
@@ -6310,7 +6119,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.0, minimist@npm:^1.2.5, minimist@npm:^1.2.6, minimist@npm:^1.2.8":
+"minimist@npm:^1.2.0, minimist@npm:^1.2.5, minimist@npm:^1.2.6":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 10c0/19d3fcdca050087b84c2029841a093691a91259a47def2f18222f41e7645a0b7c44ef4b40e88a1e58a40c84d2ef0ee6047c55594d298146d0eb3f6b737c20ce6
@@ -6414,17 +6223,6 @@ __metadata:
   dependencies:
     minipass: "npm:^7.1.2"
   checksum: 10c0/5aad75ab0090b8266069c9aabe582c021ae53eb33c6c691054a13a45db3b4f91a7fb1bd79151e6b4e9e9a86727b522527c0a06ec7d45206b745d54cd3097bcec
-  languageName: node
-  linkType: hard
-
-"mkdirp@npm:^0.5.1":
-  version: 0.5.6
-  resolution: "mkdirp@npm:0.5.6"
-  dependencies:
-    minimist: "npm:^1.2.6"
-  bin:
-    mkdirp: bin/cmd.js
-  checksum: 10c0/e2e2be789218807b58abced04e7b49851d9e46e88a2f9539242cc8a92c9b5c3a0b9bab360bd3014e02a140fc4fbc58e31176c408b493f8a2a6f4986bd7527b01
   languageName: node
   linkType: hard
 
@@ -7342,9 +7140,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "phantom@workspace:."
   dependencies:
-    "@electron-toolkit/eslint-config": "npm:^1.0.1"
-    "@electron-toolkit/preload": "npm:^3.0.0"
-    "@electron-toolkit/utils": "npm:^3.0.0"
     "@semantic-release/changelog": "npm:^6.0.3"
     "@semantic-release/commit-analyzer": "npm:^13.0.1"
     "@semantic-release/exec": "npm:^7.1.0"
@@ -7356,10 +7151,8 @@ __metadata:
     autoprefixer: "npm:^10.4.17"
     electron: "npm:^40.1.0"
     electron-builder: "npm:^26.7.0"
-    electron-builder-squirrel-windows: "npm:26.8.1"
     electron-store: "npm:^8.1.0"
     electron-updater: "npm:^6.8.3"
-    electron-vite: "npm:^5.0.0"
     eslint: "npm:^9.20.0"
     eslint-plugin-react: "npm:^7.33.2"
     lucide-react: "npm:^0.309.0"
@@ -7369,6 +7162,8 @@ __metadata:
     semantic-release: "npm:^25.0.3"
     tailwindcss: "npm:^3.4.1"
     vite: "npm:^7.3.1"
+    vite-plugin-electron: "npm:^0.29.1"
+    vite-plugin-electron-renderer: "npm:^0.14.6"
   languageName: unknown
   linkType: soft
 
@@ -7544,17 +7339,6 @@ __metadata:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10c0/dd918f7127ee7c60a0295bae2e72b3787892296e1d1c3c564d7a2a00c68d8df83cadc3178491259daa19ccc54804fb71ed8c937c6787e08d8bd4bedf8d17044c
-  languageName: node
-  linkType: hard
-
-"postject@npm:^1.0.0-alpha.6":
-  version: 1.0.0-alpha.6
-  resolution: "postject@npm:1.0.0-alpha.6"
-  dependencies:
-    commander: "npm:^9.4.0"
-  bin:
-    postject: dist/cli.js
-  checksum: 10c0/7d5c5ffdb63190d48cc4b4b617ef2fa144f2bfd5f035231af08a8d7465298ed2a08ee4b354df198b4c96b32d3d873e562b6d23caacd80eb0ec722d81381e4a3e
   languageName: node
   linkType: hard
 
@@ -8050,17 +7834,6 @@ __metadata:
   version: 1.1.0
   resolution: "reusify@npm:1.1.0"
   checksum: 10c0/4eff0d4a5f9383566c7d7ec437b671cc51b25963bd61bf127c3f3d3f68e44a026d99b8d2f1ad344afff8d278a8fe70a8ea092650a716d22287e8bef7126bb2fa
-  languageName: node
-  linkType: hard
-
-"rimraf@npm:~2.6.2":
-  version: 2.6.3
-  resolution: "rimraf@npm:2.6.3"
-  dependencies:
-    glob: "npm:^7.1.3"
-  bin:
-    rimraf: ./bin.js
-  checksum: 10c0/f1e646f8c567795f2916aef7aadf685b543da6b9a53e482bb04b07472c7eef2b476045ba1e29f401c301c66b630b22b815ab31fdd60c5e1ae6566ff523debf45
   languageName: node
   linkType: hard
 
@@ -8990,16 +8763,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"temp@npm:^0.9.0":
-  version: 0.9.4
-  resolution: "temp@npm:0.9.4"
-  dependencies:
-    mkdirp: "npm:^0.5.1"
-    rimraf: "npm:~2.6.2"
-  checksum: 10c0/7a1cd75efa65b9ca97fc0dfa752673842d23fa41d9c641a447d86ca986eb7662f0d17771e1edf8d0149e76de3c6e7005faf2ccaa3baf64811c86d1d1a951dda7
-  languageName: node
-  linkType: hard
-
 "tempy@npm:^3.0.0":
   version: 3.2.0
   resolution: "tempy@npm:3.2.0"
@@ -9455,6 +9218,25 @@ __metadata:
     core-util-is: "npm:1.0.2"
     extsprintf: "npm:^1.2.0"
   checksum: 10c0/293fb060a4c9b07965569a0c3e45efa954127818707995a8a4311f691b5d6687be99f972c759838ba6eecae717f9af28e3c49d2afc7bbdf5f0b675238f1426e8
+  languageName: node
+  linkType: hard
+
+"vite-plugin-electron-renderer@npm:^0.14.6":
+  version: 0.14.6
+  resolution: "vite-plugin-electron-renderer@npm:0.14.6"
+  checksum: 10c0/1a36ec13d0cd3eecf53772251efd9d100604ae844da7bca17f4f33efab6eedc762ce4d16b8ba4842a85c87789fe07416ef98a5fc4308088c1b1ff297262556f2
+  languageName: node
+  linkType: hard
+
+"vite-plugin-electron@npm:^0.29.1":
+  version: 0.29.1
+  resolution: "vite-plugin-electron@npm:0.29.1"
+  peerDependencies:
+    vite-plugin-electron-renderer: "*"
+  peerDependenciesMeta:
+    vite-plugin-electron-renderer:
+      optional: true
+  checksum: 10c0/8821a5177cb8747215e25314418342c527c7535a1b3407429f7e35614ec97a75bd893f20449462d62f4884465a43378f7c7f0a9db607c7de3a448348f40d30db
   languageName: node
   linkType: hard
 

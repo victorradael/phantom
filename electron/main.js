@@ -1,27 +1,18 @@
-import { app, shell, BrowserWindow, ipcMain, Menu, safeStorage } from 'electron'
-import * as electron from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu, safeStorage, nativeImage } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
 import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
 
+const isDev = process.env.NODE_ENV === 'development'
+const store = new Store()
+
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = false
-
-const store = new Store()
 
 // Suppress some noisy Electron/Chromium logs on Linux
 app.commandLine.appendSwitch('log-level', '3')
 app.commandLine.appendSwitch('disable-gpu-process-crash-log')
-
-// On Linux dev, the chrome-sandbox SUID binary is not root-owned, so disable
-// the OS-level sandbox for the dev process only. In packaged builds the
-// installer sets the correct permissions and this branch is never reached.
-if (is.dev && process.platform === 'linux') {
-    app.commandLine.appendSwitch('no-sandbox')
-}
 
 // MIGRATION: Check if upgrading from Mini Browser
 // If so, move user data to new Phantom directory
@@ -34,14 +25,14 @@ const runMigration = () => {
 
     try {
         fs.renameSync(miniBrowserPath, phantomPath)
-        if (is.dev) console.log('[Migration] Mini Browser -> Phantom: success')
+        if (isDev) console.log('[Migration] Mini Browser -> Phantom: success')
     } catch (renameErr) {
         // Cross-device rename fails with EXDEV; fall back to recursive copy
         if (renameErr.code === 'EXDEV') {
             try {
                 fs.cpSync(miniBrowserPath, phantomPath, { recursive: true })
                 fs.rmSync(miniBrowserPath, { recursive: true, force: true })
-                if (is.dev) console.log('[Migration] Mini Browser -> Phantom: cross-device copy success')
+                if (isDev) console.log('[Migration] Mini Browser -> Phantom: cross-device copy success')
             } catch (copyErr) {
                 console.error('[Migration] Failed to copy:', copyErr)
             }
@@ -57,7 +48,7 @@ runMigration()
 app.setName('Phantom')
 
 // Linux: Explicitly link to the desktop file for icon association in dev mode
-if (is.dev && process.platform === 'linux') {
+if (isDev && process.platform === 'linux') {
     app.setDesktopName('phantom-dev.desktop')
 }
 
@@ -76,7 +67,7 @@ function rateLimitedHandle(channel, limit, windowMs, handler) {
         entry.count++
         ipcCallCounts.set(key, entry)
         if (entry.count > limit) {
-            if (is.dev) console.warn(`[IPC] Rate limit exceeded for channel: ${channel}`)
+            if (isDev) console.warn(`[IPC] Rate limit exceeded for channel: ${channel}`)
             return null
         }
         return handler(event, ...args)
@@ -84,7 +75,7 @@ function rateLimitedHandle(channel, limit, windowMs, handler) {
 }
 
 function createWindow() {
-    const iconPath = join(__dirname, '../../resources/icon.png')
+    const iconPath = join(__dirname, '../resources/icon.png')
     const mainWindow = new BrowserWindow({
         width: 900,
         height: 670,
@@ -92,10 +83,10 @@ function createWindow() {
         autoHideMenuBar: true,
         frame: false,
         alwaysOnTop: true,
-        icon: electron.nativeImage.createFromPath(iconPath),
+        icon: nativeImage.createFromPath(iconPath),
         webPreferences: {
-            preload: join(__dirname, '../preload/index.js'),
-            sandbox: true,       // FIX-1: sandbox enabled for OS-level isolation
+            preload: join(__dirname, 'preload.js'),
+            sandbox: true,
             contextIsolation: true,
             webviewTag: true
         }
@@ -108,13 +99,16 @@ function createWindow() {
     })
 
     mainWindow.on('ready-to-show', () => {
-        if (is.dev) console.log('[Window] ready-to-show')
+        if (isDev) console.log('[Window] ready-to-show')
         mainWindow.show()
 
         // Wayland sometimes needs a small delay after show to respect alwaysOnTop
-        setTimeout(() => {
-            mainWindow.setAlwaysOnTop(true)
-        }, 200)
+        setTimeout(() => { mainWindow.setAlwaysOnTop(true) }, 200)
+
+        // Check for updates after startup (only in packaged app)
+        if (app.isPackaged) {
+            setTimeout(() => autoUpdater.checkForUpdates(), 3000)
+        }
     })
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -122,12 +116,10 @@ function createWindow() {
         return { action: 'deny' }
     })
 
-    // HMR for renderer base on electron-vite cli.
-    // Load the remote URL for development or the local html file for production.
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-        mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    if (process.env.VITE_DEV_SERVER_URL) {
+        mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
     } else {
-        mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+        mainWindow.loadFile(join(__dirname, '../dist/index.html'))
     }
 
     // Auto-updater events — relay to renderer
@@ -156,13 +148,6 @@ function createWindow() {
     })
     rateLimitedHandle('install-update', 1, 60000, () => {
         autoUpdater.quitAndInstall()
-    })
-
-    // Check for updates 3 seconds after window is ready (only in packaged app)
-    mainWindow.once('ready-to-show', () => {
-        if (app.isPackaged) {
-            setTimeout(() => autoUpdater.checkForUpdates(), 3000)
-        }
     })
 
     // Always on top toggle IPC
@@ -395,19 +380,14 @@ app.on('web-contents-created', (_, contents) => {
 })
 
 app.whenReady().then(() => {
-    electronApp.setAppUserModelId('com.victorradael.phantom')
-
-    app.on('browser-window-created', (_, window) => {
-        optimizer.watchWindowShortcuts(window)
-    })
-
+    app.setAppUserModelId('com.victorradael.phantom')
     createWindow()
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 
-    if (is.dev) console.log('[App] Ready, createWindow called')
+    if (isDev) console.log('[App] Ready, createWindow called')
 })
 
 app.on('window-all-closed', () => {

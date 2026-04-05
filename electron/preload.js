@@ -1,8 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
-const api = {
+contextBridge.exposeInMainWorld('api', {
     toggleAlwaysOnTop:    () => ipcRenderer.invoke('toggle-always-on-top'),
     getAlwaysOnTop:       () => ipcRenderer.invoke('get-always-on-top'),
     openExtensionsFolder: () => ipcRenderer.invoke('open-extensions-folder'),
@@ -10,8 +8,8 @@ const api = {
     getUrls:              () => ipcRenderer.invoke('get-urls'),
     saveUrls:        (urls) => ipcRenderer.invoke('save-urls', urls),
     getAppVersion:        () => ipcRenderer.invoke('get-app-version'),
-    quitApp:              () => ipcRenderer.invoke('quit-app'),          // FIX-2
-    openExternal:    (url) => ipcRenderer.invoke('open-external', url), // FIX-3/FIX-4
+    quitApp:              () => ipcRenderer.invoke('quit-app'),
+    openExternal:    (url) => ipcRenderer.invoke('open-external', url),
     // Workspaces
     getWorkspaces:               () => ipcRenderer.invoke('get-workspaces'),
     saveWorkspaces:  (workspaces) => ipcRenderer.invoke('save-workspaces', workspaces),
@@ -33,19 +31,7 @@ const api = {
     // API operations (run in main process, bypasses renderer CSP)
     testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
     syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),
-    pullSync:               (url) => ipcRenderer.invoke('pull-sync', url),
+    pullSync:           (apiUrl) => ipcRenderer.invoke('pull-sync', apiUrl),
     deleteSyncedLink:   (payload) => ipcRenderer.invoke('delete-synced-link', payload),
     deleteSyncedWorkspace: (payload) => ipcRenderer.invoke('delete-synced-workspace', payload)
-}
-
-if (process.contextIsolated) {
-    try {
-        contextBridge.exposeInMainWorld('electron', electronAPI)
-        contextBridge.exposeInMainWorld('api', api)
-    } catch (error) {
-        if (import.meta.env?.DEV) console.error(error)
-    }
-} else {
-    window.electron = electronAPI
-    window.api = api
-}
+})
