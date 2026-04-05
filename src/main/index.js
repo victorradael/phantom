@@ -16,6 +16,13 @@ const store = new Store()
 app.commandLine.appendSwitch('log-level', '3')
 app.commandLine.appendSwitch('disable-gpu-process-crash-log')
 
+// On Linux dev, the chrome-sandbox SUID binary is not root-owned, so disable
+// the OS-level sandbox for the dev process only. In packaged builds the
+// installer sets the correct permissions and this branch is never reached.
+if (is.dev && process.platform === 'linux') {
+    app.commandLine.appendSwitch('no-sandbox')
+}
+
 // MIGRATION: Check if upgrading from Mini Browser
 // If so, move user data to new Phantom directory
 const phantomPath = app.getPath('userData') // Default: ~/.config/Phantom
