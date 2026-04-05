@@ -75,12 +75,12 @@
         "deb"
       ],
       "category": "Utility",
-      "icon": "resources/icon.png",
+      "icon": "public/icon.png",
       "executableName": "phantom"
     },
     "win": {
       "target": "nsis",
-      "icon": "resources/icon.png"
+      "icon": "public/icon.png"
     },
     "nsis": {
       "artifactName": "Phantom-Setup-${version}.${ext}"

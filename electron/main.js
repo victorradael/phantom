@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Menu, safeStorage, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu, safeStorage } from 'electron'
 import { join } from 'path'
 import Store from 'electron-store'
 import fs from 'fs'
@@ -75,7 +75,14 @@ function rateLimitedHandle(channel, limit, windowMs, handler) {
 }
 
 function createWindow() {
-    const iconPath = join(__dirname, '../resources/icon.png')
+    // In dev, icons live in public/ (served by Vite); in prod, Vite copies public/ to dist/
+    const iconsDir = process.env.VITE_DEV_SERVER_URL
+        ? join(__dirname, '../public')
+        : join(__dirname, '../dist')
+    const iconPath = process.platform === 'win32'
+        ? join(iconsDir, 'icon.ico')
+        : join(iconsDir, 'icon.png')
+
     const mainWindow = new BrowserWindow({
         width: 900,
         height: 670,
@@ -83,7 +90,7 @@ function createWindow() {
         autoHideMenuBar: true,
         frame: false,
         alwaysOnTop: true,
-        icon: nativeImage.createFromPath(iconPath),
+        icon: iconPath,
         webPreferences: {
             preload: join(__dirname, 'preload.js'),
             sandbox: true,
