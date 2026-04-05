@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import iconSrc from '/icon.png'
 import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
@@ -311,7 +312,7 @@ function App() {
             <div className="flex-1 w-full bg-white relative">
                 {loadError && (
                     <div className="absolute inset-0 z-10 bg-gray-900 flex flex-col items-center justify-center p-8 text-center">
-                        <img src="/icon.png" alt="Phantom" className="w-16 h-16 mb-4 opacity-50" />
+                        <img src={iconSrc} alt="Phantom" className="w-16 h-16 mb-4 opacity-50" />
                         <h2 className="text-xl font-bold text-gray-100 mb-2">The Phantom cannot reach this realm.</h2>
                         <p className="text-gray-400 max-w-md mb-6">{loadError}</p>
                         <button

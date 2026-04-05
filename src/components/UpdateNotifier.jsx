@@ -56,7 +56,7 @@ export default function UpdateNotifier() {
                         <div className="mt-2 flex flex-col gap-1">
                             <div className="w-full bg-purple-900/40 rounded-full h-1.5">
                                 <div
-                                    className="bg-purple-400h-1.5 rounded-full transition-all"
+                                    className="bg-purple-400 h-1.5 rounded-full transition-all"
                                     style={{ width: `${downloadProgress}%` }}
                                 />
                             </div>

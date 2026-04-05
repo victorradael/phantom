@@ -1,7 +1,9 @@
+import iconSrc from '/icon.png'
+
 export default function GhostLogo({ isHidden, onTrigger }) {
     return (
         <img
-            src="/icon.png"
+            src={iconSrc}
             alt="Phantom"
             onMouseEnter={onTrigger}
             className="w-10 h-10 inline-block cursor-default select-none transition-all duration-1000 ease-in-out"
