@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Check out git repository
@@ -49,6 +50,53 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack and install Yarn
+        run: corepack enable && corepack install
+
+      - name: Get yarn cache directory
+        id: yarn-cache-dir
+        shell: bash
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - name: Restore yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build Linux installers
+        run: yarn build:linux --publish never
+
+      - name: Upload Linux assets to release
+        shell: bash
+        run: |
+          VERSION="${{ needs.release.outputs.new_release_version }}"
+          gh release upload "v$VERSION" dist-release/*.AppImage dist-release/*.deb dist-release/latest-linux.yml --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     runs-on: windows-latest
@@ -89,8 +137,15 @@ jobs:
       - name: Build renderer
         run: npx vite build
 
-      - name: Build and publish Windows installer
-        run: npx electron-builder --win --publish always
+      - name: Build Windows installer
+        run: npx electron-builder --win --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload Windows assets to release
+        shell: bash
+        run: |
+          VERSION="${{ needs.release.outputs.new_release_version }}"
+          gh release upload "v$VERSION" dist-release/*.exe dist-release/latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
