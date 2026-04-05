@@ -1,54 +1,38 @@
 import { useState, useEffect } from 'react'
-import { Sparkles, Download, X } from 'lucide-react'
+import { Sparkles, Download, X, RefreshCw } from 'lucide-react'
 
-const REPO = 'victorradael/phantom'
-const GITHUB_API = `https://api.github.com/repos/${REPO}/releases/latest`
-
-export default function UpdateNotifier({ currentVersion }) {
-    const [latestVersion, setLatestVersion] = useState(null)
-    const [downloadUrl, setDownloadUrl] = useState(null)
-    const [isVisible, setIsVisible] = useState(false)
+export default function UpdateNotifier() {
+    const [updateInfo, setUpdateInfo] = useState(null)
+    const [downloadProgress, setDownloadProgress] = useState(null)
+    const [isDownloaded, setIsDownloaded] = useState(false)
     const [isDismissed, setIsDismissed] = useState(false)
 
     useEffect(() => {
-        if (!currentVersion) return
-
-        const checkUpdate = async () => {
-            try {
-                const response = await fetch(GITHUB_API)
-                if (!response.ok) return
-
-                const data = await response.json()
-                const latest = data.tag_name.replace('v', '').trim()
-                const current = currentVersion.replace('v', '').trim()
-
-                if (latest !== current) {
-                    setLatestVersion(data.tag_name)
-                    setDownloadUrl(data.html_url)
-                    setIsVisible(true)
-                }
-            } catch (error) {
-                // FIX-11: Handled promise rejection — log only in dev
-                if (import.meta.env.DEV) console.error('Failed to check for updates:', error)
-            }
-        }
-
-        // FIX-11: Attach catch to the top-level call
-        checkUpdate().catch((err) => {
-            if (import.meta.env.DEV) console.error('[UpdateNotifier] Unexpected error:', err)
+        window.api?.onUpdateAvailable((info) => {
+            setUpdateInfo(info)
         })
-    }, [currentVersion])
+        window.api?.onDownloadProgress((progress) => {
+            setDownloadProgress(Math.floor(progress.percent))
+        })
+        window.api?.onUpdateDownloaded(() => {
+            setDownloadProgress(null)
+            setIsDownloaded(true)
+        })
+        window.api?.onUpdateError((message) => {
+            if (import.meta.env.DEV) console.error('[UpdateNotifier] Error:', message)
+        })
+    }, [])
 
-    // FIX-4 + FIX-7: Use the secure preload bridge (window.api.openExternal) instead of
-    // direct ipcRenderer access. Removed the curl|bash clipboard copy — opens the
-    // GitHub release page directly so the user can download a signed package.
-    const handleUpdateClick = async () => {
-        if (downloadUrl && window.api?.openExternal) {
-            await window.api.openExternal(downloadUrl)
-        }
+    if (!updateInfo || isDismissed) return null
+
+    const handleDownload = () => {
+        setDownloadProgress(0)
+        window.api?.downloadUpdate()
     }
 
-    if (!isVisible || isDismissed) return null
+    const handleInstall = () => {
+        window.api?.installUpdate()
+    }
 
     return (
         <div className="fixed bottom-20 right-8 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -65,15 +49,40 @@ export default function UpdateNotifier({ currentVersion }) {
                         New Version Available!
                     </h3>
                     <p className="text-xs text-slate-300/90 font-medium">
-                        Version {latestVersion} is ready.
+                        Version {updateInfo.version} is ready.
                     </p>
-                    <button
-                        onClick={handleUpdateClick}
-                        className="mt-2 flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-blue-400/30 no-drag"
-                    >
-                        <Download size={14} className="text-blue-300" />
-                        View Release
-                    </button>
+
+                    {downloadProgress !== null && !isDownloaded && (
+                        <div className="mt-2 flex flex-col gap-1">
+                            <div className="w-full bg-blue-900/40 rounded-full h-1.5">
+                                <div
+                                    className="bg-blue-400 h-1.5 rounded-full transition-all"
+                                    style={{ width: `${downloadProgress}%` }}
+                                />
+                            </div>
+                            <span className="text-[10px] text-slate-400">{downloadProgress}% downloaded</span>
+                        </div>
+                    )}
+
+                    {!isDownloaded && downloadProgress === null && (
+                        <button
+                            onClick={handleDownload}
+                            className="mt-2 flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-blue-400/30 no-drag"
+                        >
+                            <Download size={14} className="text-blue-300" />
+                            Download Update
+                        </button>
+                    )}
+
+                    {isDownloaded && (
+                        <button
+                            onClick={handleInstall}
+                            className="mt-2 flex items-center justify-center gap-2 bg-green-500/20 hover:bg-green-500/40 text-green-100 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-green-400/30 no-drag"
+                        >
+                            <RefreshCw size={14} className="text-green-300" />
+                            Install & Restart
+                        </button>
+                    )}
                 </div>
 
                 <button

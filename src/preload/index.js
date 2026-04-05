@@ -21,6 +21,15 @@ const api = {
     // Sync config
     getSyncConfig:               () => ipcRenderer.invoke('get-sync-config'),
     saveSyncConfig:     (config) => ipcRenderer.invoke('save-sync-config', config),
+    // Updater
+    checkForUpdates:             () => ipcRenderer.invoke('check-for-updates'),
+    downloadUpdate:              () => ipcRenderer.invoke('download-update'),
+    installUpdate:               () => ipcRenderer.invoke('install-update'),
+    onUpdateAvailable:    (cb) => ipcRenderer.on('update-available', (_, info) => cb(info)),
+    onUpdateNotAvailable: (cb) => ipcRenderer.on('update-not-available', (_, info) => cb(info)),
+    onDownloadProgress:   (cb) => ipcRenderer.on('download-progress', (_, progress) => cb(progress)),
+    onUpdateDownloaded:   (cb) => ipcRenderer.on('update-downloaded', (_, info) => cb(info)),
+    onUpdateError:        (cb) => ipcRenderer.on('update-error', (_, message) => cb(message)),
     // API operations (run in main process, bypasses renderer CSP)
     testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
     syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),

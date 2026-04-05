@@ -5,6 +5,10 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
 import fs from 'fs'
+import { autoUpdater } from 'electron-updater'
+
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = false
 
 const store = new Store()
 
@@ -118,6 +122,41 @@ function createWindow() {
     } else {
         mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
+
+    // Auto-updater events — relay to renderer
+    autoUpdater.on('update-available', (info) => {
+        mainWindow.webContents.send('update-available', info)
+    })
+    autoUpdater.on('update-not-available', (info) => {
+        mainWindow.webContents.send('update-not-available', info)
+    })
+    autoUpdater.on('download-progress', (progress) => {
+        mainWindow.webContents.send('download-progress', progress)
+    })
+    autoUpdater.on('update-downloaded', (info) => {
+        mainWindow.webContents.send('update-downloaded', info)
+    })
+    autoUpdater.on('error', (err) => {
+        mainWindow.webContents.send('update-error', err.message)
+    })
+
+    // Auto-updater IPC handlers
+    rateLimitedHandle('check-for-updates', 3, 60000, () => {
+        if (app.isPackaged) autoUpdater.checkForUpdates()
+    })
+    rateLimitedHandle('download-update', 1, 300000, () => {
+        autoUpdater.downloadUpdate()
+    })
+    rateLimitedHandle('install-update', 1, 60000, () => {
+        autoUpdater.quitAndInstall()
+    })
+
+    // Check for updates 3 seconds after window is ready (only in packaged app)
+    mainWindow.once('ready-to-show', () => {
+        if (app.isPackaged) {
+            setTimeout(() => autoUpdater.checkForUpdates(), 3000)
+        }
+    })
 
     // Always on top toggle IPC
     rateLimitedHandle('toggle-always-on-top', 20, 1000, () => {

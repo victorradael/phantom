@@ -12,6 +12,7 @@
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:linux": "electron-vite build && electron-builder --linux",
+    "build:win": "electron-vite build && electron-builder --win",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "audit": "yarn npm audit --all"
   },
@@ -36,12 +37,14 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.8.3",
     "lucide-react": "^0.309.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.1",
+    "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
@@ -64,6 +67,11 @@
   "build": {
     "appId": "com.victorradael.phantom",
     "productName": "Phantom",
+    "publish": {
+      "provider": "github",
+      "owner": "victorradael",
+      "repo": "phantom"
+    },
     "directories": {
       "output": "dist"
     },
@@ -75,6 +83,13 @@
       "category": "Utility",
       "icon": "resources/icon.png",
       "executableName": "phantom"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.png"
+    },
+    "nsis": {
+      "artifactName": "Phantom-Setup-${version}.${ext}"
     },
     "deb": {
       "packageName": "phantom",

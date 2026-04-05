@@ -549,7 +549,7 @@ function App() {
                 Ctrl + Q to close
             </div>
 
-            <UpdateNotifier currentVersion={appVersion} />
+            <UpdateNotifier />
         </div>
     )
 }
