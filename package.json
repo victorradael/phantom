@@ -1,7 +1,7 @@
 {
   "name": "phantom",
   "productName": "Phantom",
-  "version": "2.10.2",
+  "version": "2.10.3",
   "private": true,
   "description": "A silent, focused browser for the shadows.",
   "main": "dist-electron/main.js",
