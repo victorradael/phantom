@@ -1,4 +1,4 @@
-# 👻 Phantom
+# <img src="public/icon.png" width="32" height="32" align="center" alt="Phantom icon"> Phantom
 
 A minimalist, elegant, and productivity-focused browser. Phantom was designed to be a lightweight reference tool, always at hand while you work on other tasks.
 
@@ -7,7 +7,7 @@ A minimalist, elegant, and productivity-focused browser. Phantom was designed to
 ## ✨ Visual Identity & Experience
 Phantom abandons the standard browser look for a modern native app experience:
 - **Frameless Window**: Interface without borders or system title bars, maximizing content space.
-- **Minimalist Identity**: Ghost emoji 👻 icon reflecting its stealthy, focused nature.
+- **Minimalist Identity**: Custom icon reflecting its stealthy, focused nature.
 - **Smart Favicons**: The header and dashboard automatically display site icons (favicons) with a resilient fallback system.
 - **Dynamic Title**: The header acts as a smart tab, updating the title as you navigate.
 
