@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+*, *::before, *::after {
+  font-family: 'Ubuntu Mono', monospace !important;
+  text-transform: uppercase !important;
+}
+
 :root {
   /* Darker monochromatic palette to match low-poly icon */
   --metal-bg: linear-gradient(135deg,
@@ -24,6 +29,8 @@ body {
   /* zinc-950 - almost black */
   color: #fafafa;
   /* zinc-50 */
+  font-family: 'Ubuntu Mono', sans-serif;
+  text-transform: uppercase;
 }
 
 .draggable {
