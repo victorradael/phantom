@@ -18,15 +18,15 @@ import {
 
 function ConnectionIndicator({ status }) {
     if (status === 'unconfigured') {
-        return <span className="w-2 h-2 rounded-full bg-gray-600 inline-block" title="Not configured" />
+        return <span className="w-2 h-2 bg-gray-600 inline-block" title="Not configured" />
     }
     if (status === 'testing') {
         return <Loader size={10} className="animate-spin text-yellow-400 inline-block" />
     }
     if (status === 'connected') {
-        return <span className="w-2 h-2 rounded-full bg-green-500 inline-block" title="Connected" />
+        return <span className="w-2 h-2 bg-green-500 inline-block" title="Connected" />
     }
-    return <span className="w-2 h-2 rounded-full bg-red-500 inline-block" title="Disconnected" />
+    return <span className="w-2 h-2 bg-red-500 inline-block" title="Disconnected" />
 }
 
 function SyncStatusBadge({ syncStatus, syncError }) {
@@ -140,7 +140,7 @@ export default function WorkspaceSidebar({
                 {apiSectionOpen && (
                     <div className="px-3 pb-3 space-y-2">
                         {!apiUrl && (
-                            <p className="text-xs text-gray-500 bg-[#1a0f2e] rounded-lg p-2 leading-relaxed">
+                            <p className="text-xs text-gray-500 bg-[#1a0f2e] p-2 leading-relaxed">
                                 Configure an API URL to enable workspace synchronization.
                             </p>
                         )}
@@ -158,14 +158,14 @@ export default function WorkspaceSidebar({
                                     }
                                 }}
                                 placeholder="http://localhost:8000"
-                                className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
+                                className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
                             />
 
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleTestConnection}
                                     disabled={!localApiUrl || connectionStatus === 'testing'}
-                                    className="flex-1 text-xs px-3 py-1.5 bg-purple-900/40 hover:bg-purple-800/40 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 rounded-lg transition-colors flex items-center justify-center gap-1 no-drag"
+                                    className="flex-1 text-xs px-3 py-1.5 bg-purple-900/40 hover:bg-purple-800/40 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 transition-colors flex items-center justify-center gap-1 no-drag"
                                 >
                                     {connectionStatus === 'testing' ? (
                                         <><Loader size={10} className="animate-spin" /> Testing...</>
@@ -177,7 +177,7 @@ export default function WorkspaceSidebar({
                             </div>
 
                             {testResult && !testResult.ok && (
-                                <p className="text-xs text-red-400 bg-red-900/20 rounded px-2 py-1 truncate" title={testResult.error}>
+                                <p className="text-xs text-red-400 bg-red-900/20 px-2 py-1 truncate" title={testResult.error}>
                                     {testResult.error}
                                 </p>
                             )}
@@ -208,7 +208,7 @@ export default function WorkspaceSidebar({
                         {workspaces.map((ws) => (
                             <div
                                 key={ws.uuid}
-                                className={`flex items-center justify-between rounded-lg px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
+                                className={`flex items-center justify-between px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
                                     selectedWorkspaceId === ws.uuid
                                         ? 'bg-purple-800/50 text-white'
                                         : 'hover:bg-purple-900/30 text-gray-300'
@@ -245,12 +245,12 @@ export default function WorkspaceSidebar({
                                         }
                                     }}
                                     placeholder="Workspace name"
-                                    className="flex-1 bg-[#0d0a14] border border-purple-900/40 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 no-drag"
+                                    className="flex-1 bg-[#0d0a14] border border-purple-900/40 px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 no-drag"
                                     autoFocus
                                 />
                                 <button
                                     onClick={handleAddWorkspace}
-                                    className="p-1 bg-purple-700 hover:bg-purple-600 rounded text-white no-drag"
+                                    className="p-1 bg-purple-700 hover:bg-purple-600 text-white no-drag"
                                 >
                                     <Plus size={12} />
                                 </button>
@@ -258,7 +258,7 @@ export default function WorkspaceSidebar({
                         ) : (
                             <button
                                 onClick={() => setShowNewWorkspaceInput(true)}
-                                className="w-full flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-200 hover:bg-purple-900/20 rounded-lg transition-colors mt-1 no-drag"
+                                className="w-full flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-gray-200 hover:bg-purple-900/20 transition-colors mt-1 no-drag"
                             >
                                 <Plus size={12} /> New Workspace
                             </button>
@@ -294,7 +294,7 @@ export default function WorkspaceSidebar({
                         <button
                             onClick={handleSync}
                             disabled={syncStatus === 'syncing'}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors no-drag"
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors no-drag"
                         >
                             <RefreshCw size={12} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
                             Sync "{selectedWorkspace.name}"
