@@ -1,16 +1,16 @@
 import iconSrc from '/icon.png'
 
-export default function GhostLogo({ isHidden, onTrigger }) {
+export default function GhostLogo({ isHidden }) {
     return (
         <img
             src={iconSrc}
             alt="Phantom"
-            onMouseEnter={onTrigger}
-            className="w-10 h-10 inline-block cursor-default select-none transition-all duration-1000 ease-in-out"
+            className="w-14 h-14 inline-block cursor-default select-none"
             style={{
                 opacity: isHidden ? 0 : 1,
-                transform: isHidden ? 'scale(1.5)' : 'scale(1)',
-                filter: isHidden ? 'blur(8px)' : 'blur(0)'
+                transform: isHidden ? 'scale(1.6) translateY(-6px)' : 'scale(1) translateY(0)',
+                filter: isHidden ? 'blur(14px) brightness(1.4)' : 'blur(0) brightness(1)',
+                transition: 'opacity 1400ms ease-in-out, transform 1400ms ease-in-out, filter 1400ms ease-in-out',
             }}
         />
     )

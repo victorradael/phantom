@@ -6,6 +6,7 @@ import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
 import GhostLogo from './components/GhostLogo'
 import WorkspaceSidebar from './components/WorkspaceSidebar'
+import SplashScreen from './components/SplashScreen'
 import { useWorkspaces } from './hooks/useWorkspaces'
 import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
@@ -62,6 +63,9 @@ function App() {
     const [dashboardContainer, setDashboardContainer] = useState(null)
     const dashboardRef = useRef(null)
     const [migrated, setMigrated] = useState(false)
+
+    // Splash screen
+    const [showSplash, setShowSplash] = useState(true)
 
     // Ghost Effect State
     const [isGhostHidden, setIsGhostHidden] = useState(false)
@@ -266,7 +270,7 @@ function App() {
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                     <button
                         onClick={() => { setCurrentUrl(''); setLoadError(null) }}
-                        className="p-1.5 hover:bg-purple-900/30 rounded text-gray-300 no-drag shrink-0"
+                        className="p-1.5 hover:bg-purple-900/30 text-gray-300 no-drag shrink-0"
                         title="Back to Dashboard"
                     >
                         <ArrowLeft size={16} />
@@ -288,21 +292,21 @@ function App() {
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
-                        className={`p-1.5 rounded no-drag ${isWorkspaceSidebarOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                        className={`p-1.5 no-drag ${isWorkspaceSidebarOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Workspace Sidebar"
                     >
                         <Layers size={16} />
                     </button>
                     <button
                         onClick={toggleAlwaysOnTop}
-                        className={`p-1.5 rounded no-drag ${isAlwaysOnTop ? 'bg-purple-700/60 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                        className={`p-1.5 no-drag ${isAlwaysOnTop ? 'bg-purple-700/60 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Always on Top"
                     >
                         {isAlwaysOnTop ? <Pin size={16} /> : <PinOff size={16} />}
                     </button>
                     <button
                         onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
-                        className={`p-1.5 rounded no-drag ${isBitwardenOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                        className={`p-1.5 no-drag ${isBitwardenOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
                         title="Toggle Bitwarden Sidebar"
                     >
                         {isBitwardenOpen ? <SidebarClose size={16} /> : <Shield size={16} />}
@@ -317,7 +321,7 @@ function App() {
                         <p className="text-gray-400 max-w-md mb-6">{loadError}</p>
                         <button
                             onClick={() => { const wv = webviewRef.current; if (wv) wv.reload() }}
-                            className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-lg transition-colors font-medium"
+                            className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white transition-colors font-medium"
                         >
                             Try Again
                         </button>
@@ -367,18 +371,20 @@ function App() {
                         dashboardRef.current = el
                         if (el !== dashboardContainer) setDashboardContainer(el)
                     }}
-                    className="h-full w-full p-4 sm:p-8 overflow-y-auto min-w-0 font-sans text-gray-100 relative z-10"
+                    className="h-full w-full p-4 sm:p-8 overflow-y-auto min-w-0 text-gray-100 relative z-10"
                 >
                     <div className="max-w-2xl mx-auto">
                         <header className="mb-8 flex items-center justify-between gap-4 flex-wrap draggable">
-                            <h1 className="text-2xl font-bold flex items-center gap-2 relative">
-                                <GhostLogo isHidden={isGhostHidden} onTrigger={handleGhostTrigger} />
+                            <h1 className="text-2xl font-bold flex items-center gap-2 relative no-drag" onMouseEnter={handleGhostTrigger}>
+                                <GhostLogo isHidden={isGhostHidden} />
                                 <span
-                                    className={`transition-all duration-[1500ms] ease-in-out block ${
-                                        isGhostHidden
-                                            ? 'blur-[10px] opacity-0 scale-[1.2] -translate-y-[10px]'
-                                            : 'blur-0 opacity-100 scale-100 translate-y-0'
-                                    }`}
+                                    style={{
+                                        opacity: isGhostHidden ? 0 : 1,
+                                        transform: isGhostHidden ? 'scale(1.15) translateY(-8px)' : 'scale(1) translateY(0)',
+                                        filter: isGhostHidden ? 'blur(16px) brightness(1.6)' : 'blur(0) brightness(1)',
+                                        transition: 'opacity 1600ms ease-in-out, transform 1600ms ease-in-out, filter 1600ms ease-in-out',
+                                        display: 'block',
+                                    }}
                                 >
                                     Phantom
                                 </span>
@@ -391,7 +397,7 @@ function App() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
-                                    className={`p-2 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border no-drag ${
+                                    className={`p-2 text-gray-300 flex items-center gap-2 transition-colors border no-drag ${
                                         isWorkspaceSidebarOpen
                                             ? 'bg-purple-800/40 border-purple-700/40'
                                             : 'bg-[#1a0f2e] hover:bg-purple-900/30 border-purple-900/40'
@@ -403,7 +409,7 @@ function App() {
                                 </button>
                                 <button
                                     onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
-                                    className="p-2 bg-[#1a0f2e] hover:bg-purple-900/30 rounded-lg text-gray-300 flex items-center gap-2 transition-colors border border-purple-900/40 no-drag"
+                                    className="p-2 bg-[#1a0f2e] hover:bg-purple-900/30 text-gray-300 flex items-center gap-2 transition-colors border border-purple-900/40 no-drag"
                                 >
                                     <Shield size={16} className="text-zinc-400" />
                                     <span className="text-sm hidden sm:inline">Bitwarden</span>
@@ -421,14 +427,14 @@ function App() {
                         )}
 
                         {!selectedWorkspace && (
-                            <div className="bg-[#1a0f2e] border border-purple-900/30 rounded-xl p-6 text-center text-gray-500 mb-8">
+                            <div className="bg-[#1a0f2e] border border-purple-900/30 p-6 text-center text-gray-500 mb-8">
                                 <Layers size={24} className="mx-auto mb-2 text-gray-600" />
                                 <p className="text-sm">No workspace selected. Create one in the sidebar to get started.</p>
                             </div>
                         )}
 
                         {selectedWorkspace && (
-                            <div className="bg-[#1a0f2e] p-4 sm:p-6 rounded-xl shadow-lg border border-purple-900/30 mb-8">
+                            <div className="bg-[#1a0f2e] p-4 sm:p-6 shadow-lg border border-purple-900/30 mb-8">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-200">Add New Link</h2>
                                 <div className="flex flex-col gap-3">
                                     <input
@@ -436,7 +442,7 @@ function App() {
                                         value={newUrl}
                                         onChange={(e) => setNewUrl(e.target.value)}
                                         placeholder="Enter URL (e.g. google.com)"
-                                        className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
+                                        className="w-full bg-[#0d0a14] border border-purple-900/40 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <input
                                         type="text"
@@ -444,11 +450,11 @@ function App() {
                                         onChange={(e) => setNewAlias(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
                                         placeholder="Name (optional)"
-                                        className="w-full bg-[#0d0a14] border border-purple-900/40 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
+                                        className="w-full bg-[#0d0a14] border border-purple-900/40 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
                                     <button
                                         onClick={addLinkToWorkspace}
-                                        className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-colors w-full flex items-center justify-center gap-2"
+                                        className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 font-medium transition-colors w-full flex items-center justify-center gap-2"
                                     >
                                         <Plus size={16} /> Add Link
                                     </button>
@@ -461,7 +467,7 @@ function App() {
                                 {workspaceLinks.map((item) => (
                                     <div
                                         key={item.uuid}
-                                        className="bg-[#1a0f2e] p-4 rounded-xl border border-purple-900/30 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
+                                        className="bg-[#1a0f2e] p-4 border border-purple-900/30 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
                                     >
                                         <div
                                             className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
@@ -470,7 +476,7 @@ function App() {
                                                 if (safe) setCurrentUrl(safe)
                                             }}
                                         >
-                                            <div className="w-10 h-10 bg-[#0d0a14] rounded-lg flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
+                                            <div className="w-10 h-10 bg-[#0d0a14] flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
                                                 <PageIcon url={item.url} />
                                             </div>
                                             <div className="min-w-0 truncate">
@@ -484,7 +490,7 @@ function App() {
                                         </div>
                                         <button
                                             onClick={() => handleRemoveLink(item.uuid)}
-                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
                                             title="Remove"
                                         >
                                             <Trash2 size={18} />
@@ -504,6 +510,8 @@ function App() {
             </div>
         </div>
     )
+
+    if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />
 
     return (
         <div className={`flex h-screen w-screen overflow-hidden bg-[#0d0a14] border border-purple-900/30 relative ${isResizing ? 'cursor-col-resize' : 'cursor-default'}`}>
@@ -546,7 +554,7 @@ function App() {
             )}
 
             {/* Watermark Helper */}
-            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-[#0d0a14]/80 px-2 py-1 rounded border border-purple-900/20 z-[100]">
+            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-[#0d0a14]/80 px-2 py-1 border border-purple-900/20 z-[100]">
                 Ctrl + Q to close
             </div>
 
