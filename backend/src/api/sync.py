@@ -2,7 +2,7 @@ import asyncpg
 from fastapi import APIRouter, Depends
 
 from src.db.database import get_pool
-from src.schemas.sync import PullResponse, SyncRequest, SyncResponse
+from src.schemas.sync import LinkUpdateData, PullResponse, SyncRequest, SyncResponse
 from src.services import sync_service
 
 router = APIRouter()
@@ -32,3 +32,10 @@ async def sync_workspace(
     request: SyncRequest, pool: asyncpg.Pool = Depends(_pool)
 ) -> SyncResponse:
     return await sync_service.sync_workspace(pool, request)
+
+
+@router.patch("/link/{uuid}", status_code=204)
+async def update_link(
+    uuid: str, payload: LinkUpdateData, pool: asyncpg.Pool = Depends(_pool)
+) -> None:
+    await sync_service.update_link(pool, uuid, payload)

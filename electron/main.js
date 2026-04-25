@@ -290,6 +290,26 @@ function createWindow() {
         }
     })
 
+    // Update a single link from backend
+    rateLimitedHandle('update-synced-link', 10, 5000, async (_, { apiUrl, uuid, payload }) => {
+        try {
+            const parsed = new URL(apiUrl)
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                return { ok: false, error: 'Invalid protocol — use http or https' }
+            }
+            const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
+            const res = await fetch(`${base}/sync/link/${encodeURIComponent(uuid)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(10000)
+            })
+            return res.ok ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
+        } catch (err) {
+            return { ok: false, error: err.message || 'Update failed' }
+        }
+    })
+
     // Delete a single link from backend
     rateLimitedHandle('delete-synced-link', 10, 5000, async (_, { apiUrl, uuid }) => {
         try {
@@ -347,7 +367,7 @@ function createWindow() {
     })
 
     // Sync workspace to backend — runs from main process to avoid CSP restrictions
-    rateLimitedHandle('sync-workspace', 3, 10000, async (_, { apiUrl, workspace, links }) => {
+    rateLimitedHandle('sync-workspace', 60, 60000, async (_, { apiUrl, workspace, links }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {

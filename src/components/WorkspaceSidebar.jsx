@@ -70,7 +70,8 @@ export default function WorkspaceSidebar({
     lastSynced,
     syncStatus,
     syncError,
-    onClose
+    onClose,
+    onDropLink
 }) {
     const [newWorkspaceName, setNewWorkspaceName] = useState('')
     const [showNewWorkspaceInput, setShowNewWorkspaceInput] = useState(false)
@@ -78,6 +79,7 @@ export default function WorkspaceSidebar({
     const [apiSectionOpen, setApiSectionOpen] = useState(true)
     const [workspaceSectionOpen, setWorkspaceSectionOpen] = useState(true)
     const [testResult, setTestResult] = useState(null)
+    const [dragOverWorkspaceId, setDragOverWorkspaceId] = useState(null)
 
     const handleAddWorkspace = () => {
         if (!newWorkspaceName.trim()) return
@@ -209,11 +211,26 @@ export default function WorkspaceSidebar({
                             <div
                                 key={ws.uuid}
                                 className={`flex items-center justify-between px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
-                                    selectedWorkspaceId === ws.uuid
-                                        ? 'bg-purple-800/50 text-white'
-                                        : 'hover:bg-purple-900/30 text-gray-300'
+                                    dragOverWorkspaceId === ws.uuid
+                                        ? 'bg-purple-700/60 text-white outline outline-1 outline-purple-400'
+                                        : selectedWorkspaceId === ws.uuid
+                                            ? 'bg-purple-800/50 text-white'
+                                            : 'hover:bg-purple-900/30 text-gray-300'
                                 }`}
                                 onClick={() => onSelectWorkspace(ws.uuid)}
+                                onDragOver={(e) => {
+                                    e.preventDefault()
+                                    if (dragOverWorkspaceId !== ws.uuid) setDragOverWorkspaceId(ws.uuid)
+                                }}
+                                onDragLeave={() => setDragOverWorkspaceId(null)}
+                                onDrop={(e) => {
+                                    e.preventDefault()
+                                    setDragOverWorkspaceId(null)
+                                    const linkUuid = e.dataTransfer.getData('text/plain')
+                                    if (linkUuid && onDropLink) {
+                                        onDropLink(linkUuid, ws.uuid)
+                                    }
+                                }}
                             >
                                 <span className="text-xs truncate flex-1">{ws.name}</span>
                                 <button

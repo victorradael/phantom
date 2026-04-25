@@ -13,6 +13,10 @@ class LinkSyncData(BaseModel):
     description: str | None = None
 
 
+class LinkUpdateData(BaseModel):
+    workspace_uuid: str
+
+
 class SyncRequest(BaseModel):
     workspace: WorkspaceSyncData
     links: list[LinkSyncData]

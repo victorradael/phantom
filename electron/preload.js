@@ -33,5 +33,6 @@ contextBridge.exposeInMainWorld('api', {
     syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),
     pullSync:           (apiUrl) => ipcRenderer.invoke('pull-sync', apiUrl),
     deleteSyncedLink:   (payload) => ipcRenderer.invoke('delete-synced-link', payload),
+    updateSyncedLink:   (payload) => ipcRenderer.invoke('update-synced-link', payload),
     deleteSyncedWorkspace: (payload) => ipcRenderer.invoke('delete-synced-workspace', payload)
 })

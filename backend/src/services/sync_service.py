@@ -1,7 +1,8 @@
 import asyncpg
+from fastapi import HTTPException
 
 from src.repositories import link_repo, workspace_repo
-from src.schemas.sync import PullLinkData, PullResponse, PullWorkspaceData, SyncRequest, SyncResponse
+from src.schemas.sync import LinkUpdateData, PullLinkData, PullResponse, PullWorkspaceData, SyncRequest, SyncResponse
 
 
 async def sync_workspace(pool: asyncpg.Pool, request: SyncRequest) -> SyncResponse:
@@ -62,4 +63,21 @@ async def pull_all(pool: asyncpg.Pool) -> PullResponse:
             )
             for r in rows
         ],
+    )
+
+
+async def update_link(pool: asyncpg.Pool, uuid: str, data: LinkUpdateData) -> None:
+    workspace = await workspace_repo.get_by_uuid(pool, data.workspace_uuid)
+    if not workspace:
+        raise HTTPException(status_code=404, detail=f"Workspace {data.workspace_uuid} not found")
+
+    await pool.execute(
+        """
+        UPDATE links 
+           SET workspace_id = $1, 
+               updated_at = now() 
+         WHERE uuid = $2::uuid
+        """,
+        workspace.id,
+        uuid,
     )

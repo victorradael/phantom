@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import iconSrc from '/icon.png'
-import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -63,6 +63,7 @@ function App() {
     const [dashboardContainer, setDashboardContainer] = useState(null)
     const dashboardRef = useRef(null)
     const [migrated, setMigrated] = useState(false)
+    const [openMoveDropdownId, setOpenMoveDropdownId] = useState(null)
 
     // Splash screen
     const [showSplash, setShowSplash] = useState(true)
@@ -86,6 +87,7 @@ function App() {
     const {
         addLink,
         removeLink,
+        moveLinkWorkspace,
         removeLinksForWorkspace,
         getLinksForWorkspace,
         mergeLinks,
@@ -176,6 +178,14 @@ function App() {
         removeLink(uuid)
         if (connectionStatus === 'connected' && apiUrl) {
             window.api.deleteSyncedLink({ apiUrl, uuid })
+        }
+    }
+
+    const handleMoveLink = (uuid, targetWorkspaceId) => {
+        if (!uuid || !targetWorkspaceId || targetWorkspaceId === selectedWorkspaceId) return
+        moveLinkWorkspace(uuid, targetWorkspaceId)
+        if (connectionStatus === 'connected' && apiUrl) {
+            window.api.updateSyncedLink({ apiUrl, uuid, payload: { workspace_uuid: targetWorkspaceId } })
         }
     }
 
@@ -359,6 +369,7 @@ function App() {
                     syncStatus={syncStatus}
                     syncError={syncError}
                     onClose={() => setIsWorkspaceSidebarOpen(false)}
+                    onDropLink={handleMoveLink}
                 />
             )}
 
@@ -467,6 +478,11 @@ function App() {
                                 {workspaceLinks.map((item) => (
                                     <div
                                         key={item.uuid}
+                                        draggable
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.setData('text/plain', item.uuid)
+                                            e.dataTransfer.effectAllowed = 'move'
+                                        }}
                                         className="bg-[#1a0f2e] p-4 border border-purple-900/30 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
                                     >
                                         <div
@@ -488,13 +504,48 @@ function App() {
                                                 </p>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleRemoveLink(item.uuid)}
-                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                                            title="Remove"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div className="flex items-center gap-1 shrink-0 relative">
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenMoveDropdownId(openMoveDropdownId === item.uuid ? null : item.uuid)
+                                                    }}
+                                                    className="p-2 text-gray-500 hover:text-blue-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                    title="Move to another workspace"
+                                                >
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                                {openMoveDropdownId === item.uuid && (
+                                                    <div className="absolute right-0 mt-1 w-48 bg-[#1a0f2e] border border-purple-900/40 shadow-xl z-50 py-1">
+                                                        <div className="px-3 py-1 text-xs text-gray-500 border-b border-purple-900/30">Move to...</div>
+                                                        {workspaces.filter(w => w.uuid !== selectedWorkspaceId).map(w => (
+                                                            <button
+                                                                key={w.uuid}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleMoveLink(item.uuid, w.uuid)
+                                                                    setOpenMoveDropdownId(null)
+                                                                }}
+                                                                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-purple-800/40 hover:text-white transition-colors truncate"
+                                                            >
+                                                                {w.name}
+                                                            </button>
+                                                        ))}
+                                                        {workspaces.length <= 1 && (
+                                                            <div className="px-3 py-2 text-sm text-gray-600">No other workspaces</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveLink(item.uuid)}
+                                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Remove"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
 

@@ -36,6 +36,12 @@ export function useLinks() {
         setLinks((prev) => prev.filter((l) => l.uuid !== uuid))
     }
 
+    const moveLinkWorkspace = (uuid, newWorkspaceId) => {
+        setLinks((prev) => prev.map((l) =>
+            l.uuid === uuid ? { ...l, workspaceId: newWorkspaceId, updatedAt: new Date().toISOString() } : l
+        ))
+    }
+
     const removeLinksForWorkspace = (workspaceId) => {
         setLinks((prev) => prev.filter((l) => l.workspaceId !== workspaceId))
     }
@@ -64,5 +70,5 @@ export function useLinks() {
         })
     }
 
-    return { links, addLink, removeLink, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, loaded }
+    return { links, addLink, removeLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, loaded }
 }

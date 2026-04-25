@@ -34,4 +34,4 @@ logs:
 	docker compose logs -f api
 
 migrate:
-	$(ALEMBIC) upgrade head
+	DATABASE_URL="postgresql://postgres:postgres@localhost:5432/phantom" $(ALEMBIC) upgrade head
