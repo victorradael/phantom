@@ -123,8 +123,8 @@ export default function WorkspaceSidebar({
         const status = syncAnalysis.workspaces?.[wsUuid]
         if (status === 'synced') return 'border-l-2 border-l-green-500/70'
         if (status === 'partial') return 'border-l-2 border-l-amber-400/80'
-        if (status === 'unsynced') return 'border-l-2 border-l-red-500/60'
-        return 'border-l-2 border-l-transparent'
+        // 'unsynced' or undefined (workspace created after last analysis)
+        return 'border-l-2 border-l-red-500/60'
     }
 
     return (
@@ -262,7 +262,7 @@ export default function WorkspaceSidebar({
 
                         {workspaces.map((ws) => {
                             const wsSyncStatus = syncAnalysis?.workspaces?.[ws.uuid]
-                            const needsSync = isConnected && (wsSyncStatus === 'partial' || wsSyncStatus === 'unsynced')
+                            const needsSync = isConnected && hasAnalysis && wsSyncStatus !== 'synced'
                             const isSyncing = syncingWorkspaceUuid === ws.uuid && syncStatus === 'syncing'
                             return (
                                 <div

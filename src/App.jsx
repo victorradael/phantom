@@ -109,7 +109,8 @@ function App() {
         syncStatus,
         syncError,
         syncAnalysis,
-        runAnalysis
+        runAnalysis,
+        removeAnalysisEntries
     } = useSync()
 
     const [syncingLinkUuid, setSyncingLinkUuid] = useState(null)
@@ -185,6 +186,7 @@ function App() {
 
     const handleRemoveLink = (uuid) => {
         removeLink(uuid)
+        removeAnalysisEntries({ linkUuids: [uuid] })
         if (connectionStatus === 'connected' && apiUrl) {
             window.api.deleteSyncedLink({ apiUrl, uuid })
         }
@@ -199,8 +201,10 @@ function App() {
     }
 
     const handleRemoveWorkspace = (uuid) => {
+        const wsLinks = getLinksForWorkspace(uuid)
         removeLinksForWorkspace(uuid)
         removeWorkspace(uuid)
+        removeAnalysisEntries({ workspaceUuid: uuid, linkUuids: wsLinks.map((l) => l.uuid) })
         if (connectionStatus === 'connected' && apiUrl) {
             window.api.deleteSyncedWorkspace({ apiUrl, uuid })
         }
@@ -525,7 +529,7 @@ function App() {
                                             e.dataTransfer.effectAllowed = 'move'
                                         }}
                                         className={`bg-[#1a0f2e] p-4 border border-purple-900/30 flex items-center justify-between group transition-colors w-full min-w-0 ${
-                                            connectionStatus === 'connected' && syncAnalysis?.links?.[item.uuid] === 'unsynced'
+                                            connectionStatus === 'connected' && syncAnalysis?.lastAnalyzedAt && syncAnalysis?.links?.[item.uuid] !== 'synced'
                                                 ? 'border-l-2 border-l-red-500/60 hover:border-l-red-400/80'
                                                 : 'hover:border-purple-500/50'
                                         }`}
@@ -550,7 +554,7 @@ function App() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0 relative">
-                                            {connectionStatus === 'connected' && syncAnalysis?.links?.[item.uuid] === 'unsynced' && (
+                                            {connectionStatus === 'connected' && syncAnalysis?.lastAnalyzedAt && syncAnalysis?.links?.[item.uuid] !== 'synced' && (
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation()

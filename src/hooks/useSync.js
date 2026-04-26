@@ -207,6 +207,18 @@ export function useSync() {
         return result
     }
 
+    const removeAnalysisEntries = ({ workspaceUuid, linkUuids = [] }) => {
+        setSyncAnalysis((prev) => {
+            const workspaces = { ...prev.workspaces }
+            const links = { ...prev.links }
+            if (workspaceUuid) delete workspaces[workspaceUuid]
+            linkUuids.forEach((uuid) => delete links[uuid])
+            const updated = { ...prev, workspaces, links }
+            window.api.saveSyncAnalysis(updated)
+            return updated
+        })
+    }
+
     const pullSync = async () => {
         if (!apiUrl || connectionStatus !== 'connected') {
             return { ok: false, error: 'Not connected to API' }
@@ -227,6 +239,7 @@ export function useSync() {
         syncError,
         setSyncStatus,
         syncAnalysis,
-        runAnalysis
+        runAnalysis,
+        removeAnalysisEntries
     }
 }
