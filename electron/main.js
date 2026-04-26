@@ -272,6 +272,16 @@ function createWindow() {
         return true
     })
 
+    // Sync analysis persistence
+    rateLimitedHandle('get-sync-analysis', 20, 1000, () => {
+        return store.get('syncAnalysis', { workspaces: {}, links: {}, lastAnalyzedAt: null })
+    })
+
+    rateLimitedHandle('save-sync-analysis', 10, 1000, (_, analysis) => {
+        store.set('syncAnalysis', analysis)
+        return true
+    })
+
     // Test API connection — runs from main process to avoid CSP restrictions
     rateLimitedHandle('test-api-connection', 5, 5000, async (_, apiUrl) => {
         try {

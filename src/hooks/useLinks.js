@@ -46,6 +46,12 @@ export function useLinks() {
         setLinks((prev) => prev.filter((l) => l.workspaceId !== workspaceId))
     }
 
+    const updateLinksWorkspaceId = (oldWorkspaceId, newWorkspaceId) => {
+        setLinks((prev) => prev.map((l) =>
+            l.workspaceId === oldWorkspaceId ? { ...l, workspaceId: newWorkspaceId } : l
+        ))
+    }
+
     const getLinksForWorkspace = (workspaceId) => {
         return links.filter((l) => l.workspaceId === workspaceId)
     }
@@ -70,5 +76,5 @@ export function useLinks() {
         })
     }
 
-    return { links, addLink, removeLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, loaded }
+    return { links, addLink, removeLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, updateLinksWorkspaceId, loaded }
 }

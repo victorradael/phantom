@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('api', {
     // Sync config
     getSyncConfig:               () => ipcRenderer.invoke('get-sync-config'),
     saveSyncConfig:     (config) => ipcRenderer.invoke('save-sync-config', config),
+    // Sync analysis
+    getSyncAnalysis:             () => ipcRenderer.invoke('get-sync-analysis'),
+    saveSyncAnalysis: (analysis) => ipcRenderer.invoke('save-sync-analysis', analysis),
     // Updater
     checkForUpdates:             () => ipcRenderer.invoke('check-for-updates'),
     downloadUpdate:              () => ipcRenderer.invoke('download-update'),

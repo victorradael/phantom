@@ -47,6 +47,13 @@ export function useWorkspaces() {
 
     const selectedWorkspace = workspaces.find((w) => w.uuid === selectedWorkspaceId) || null
 
+    const reconcileWorkspaceUuid = (oldUuid, newUuid) => {
+        setWorkspaces((prev) => prev.map((ws) =>
+            ws.uuid === oldUuid ? { ...ws, uuid: newUuid } : ws
+        ))
+        setSelectedWorkspaceId((prev) => prev === oldUuid ? newUuid : prev)
+    }
+
     // Merge workspaces from backend: adds new ones (by uuid), ignores existing
     const mergeWorkspaces = (remoteWorkspaces) => {
         setWorkspaces((prev) => {
@@ -69,6 +76,7 @@ export function useWorkspaces() {
         addWorkspace,
         removeWorkspace,
         mergeWorkspaces,
+        reconcileWorkspaceUuid,
         selectedWorkspaceId,
         selectWorkspace: setSelectedWorkspaceId,
         selectedWorkspace,
