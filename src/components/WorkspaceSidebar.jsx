@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
     Plus,
     Trash2,
@@ -13,7 +13,8 @@ import {
     ChevronRight,
     Link as LinkIcon,
     Layers,
-    SidebarClose
+    SidebarClose,
+    Info
 } from 'lucide-react'
 
 function ConnectionIndicator({ status }) {
@@ -54,6 +55,14 @@ function SyncStatusBadge({ syncStatus, syncError }) {
     return null
 }
 
+function WorkspaceSyncIcon({ wsUuid, syncingWorkspaceUuid, syncStatus }) {
+    if (syncingWorkspaceUuid !== wsUuid) return null
+    if (syncStatus === 'syncing') return <Loader size={11} className="animate-spin text-yellow-400 shrink-0" />
+    if (syncStatus === 'success') return <CheckCircle size={11} className="text-green-400 shrink-0" />
+    if (syncStatus === 'error') return <XCircle size={11} className="text-red-400 shrink-0" />
+    return null
+}
+
 export default function WorkspaceSidebar({
     workspaces,
     selectedWorkspaceId,
@@ -65,11 +74,14 @@ export default function WorkspaceSidebar({
     connectionStatus,
     onTestConnection,
     onSyncWorkspace,
+    onSyncWorkspaceById,
     selectedWorkspace,
     linksCount,
     lastSynced,
     syncStatus,
     syncError,
+    syncAnalysis,
+    syncingWorkspaceUuid,
     onClose,
     onDropLink
 }) {
@@ -80,6 +92,8 @@ export default function WorkspaceSidebar({
     const [workspaceSectionOpen, setWorkspaceSectionOpen] = useState(true)
     const [testResult, setTestResult] = useState(null)
     const [dragOverWorkspaceId, setDragOverWorkspaceId] = useState(null)
+    const [tooltipPos, setTooltipPos] = useState(null)
+    const infoIconRef = useRef(null)
 
     const handleAddWorkspace = () => {
         if (!newWorkspaceName.trim()) return
@@ -101,21 +115,60 @@ export default function WorkspaceSidebar({
         setTestResult(result)
     }
 
-    const handleSync = () => {
-        if (selectedWorkspace) {
-            onSyncWorkspace()
-        }
-    }
-
     const isConnected = connectionStatus === 'connected'
-    const canSync = isConnected && selectedWorkspace
+    const hasAnalysis = isConnected && syncAnalysis?.lastAnalyzedAt
+
+    const getWorkspaceSyncBorder = (wsUuid) => {
+        if (!hasAnalysis) return ''
+        const status = syncAnalysis.workspaces?.[wsUuid]
+        if (status === 'synced') return 'border-l-2 border-l-green-500/70'
+        if (status === 'partial') return 'border-l-2 border-l-amber-400/80'
+        if (status === 'unsynced') return 'border-l-2 border-l-red-500/60'
+        return 'border-l-2 border-l-transparent'
+    }
 
     return (
         <div className="flex flex-col h-full bg-[#0d0a14] border-r border-purple-900/40 w-64 shrink-0 overflow-y-auto">
             {/* Header */}
             <div className="h-10 bg-[#1a0f2e] border-b border-purple-900/40 flex items-center justify-between px-3 shrink-0 draggable">
                 <span className="text-sm font-semibold text-gray-200 flex items-center gap-2">
-                    <Layers size={14} className="text-zinc-400" /> Workspaces
+                    <Layers size={14} className="text-zinc-400" />
+                    Workspaces
+                    {hasAnalysis && (
+                        <div
+                            ref={infoIconRef}
+                            className="no-drag cursor-help"
+                            onMouseEnter={() => {
+                                const rect = infoIconRef.current?.getBoundingClientRect()
+                                if (rect) setTooltipPos({ top: rect.bottom + 6, left: rect.left })
+                            }}
+                            onMouseLeave={() => setTooltipPos(null)}
+                        >
+                            <Info size={12} className="text-gray-500 hover:text-gray-300 transition-colors" />
+                        </div>
+                    )}
+                    {tooltipPos && (
+                        <div
+                            style={{ position: 'fixed', top: tooltipPos.top, left: tooltipPos.left }}
+                            className="z-[9999] w-44 bg-[#0d0a14] border border-purple-900/40 p-2.5 shadow-xl pointer-events-none"
+                        >
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Sync Status</p>
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-3 shrink-0 bg-green-500/70" />
+                                    <span className="text-[10px] text-gray-400">Synced</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-3 shrink-0 bg-amber-400/80" />
+                                    <span className="text-[10px] text-gray-400">Partial (unsynced links)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-3 shrink-0 bg-red-500/60" />
+                                    <span className="text-[10px] text-gray-400">Not synced with server</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </span>
                 <button
                     onClick={onClose}
@@ -207,46 +260,71 @@ export default function WorkspaceSidebar({
                             <p className="text-xs text-gray-600 text-center py-2">No workspaces yet</p>
                         )}
 
-                        {workspaces.map((ws) => (
-                            <div
-                                key={ws.uuid}
-                                className={`flex items-center justify-between px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
-                                    dragOverWorkspaceId === ws.uuid
-                                        ? 'bg-purple-700/60 text-white outline outline-1 outline-purple-400'
-                                        : selectedWorkspaceId === ws.uuid
-                                            ? 'bg-purple-800/50 text-white'
-                                            : 'hover:bg-purple-900/30 text-gray-300'
-                                }`}
-                                onClick={() => onSelectWorkspace(ws.uuid)}
-                                onDragOver={(e) => {
-                                    e.preventDefault()
-                                    if (dragOverWorkspaceId !== ws.uuid) setDragOverWorkspaceId(ws.uuid)
-                                }}
-                                onDragLeave={() => setDragOverWorkspaceId(null)}
-                                onDrop={(e) => {
-                                    e.preventDefault()
-                                    setDragOverWorkspaceId(null)
-                                    const linkUuid = e.dataTransfer.getData('text/plain')
-                                    if (linkUuid && onDropLink) {
-                                        onDropLink(linkUuid, ws.uuid)
-                                    }
-                                }}
-                            >
-                                <span className="text-xs truncate flex-1">{ws.name}</span>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (confirm(`Delete workspace "${ws.name}"?`)) {
-                                            onRemoveWorkspace(ws.uuid)
+                        {workspaces.map((ws) => {
+                            const wsSyncStatus = syncAnalysis?.workspaces?.[ws.uuid]
+                            const needsSync = isConnected && (wsSyncStatus === 'partial' || wsSyncStatus === 'unsynced')
+                            const isSyncing = syncingWorkspaceUuid === ws.uuid && syncStatus === 'syncing'
+                            return (
+                                <div
+                                    key={ws.uuid}
+                                    className={`flex items-center justify-between px-2 py-1.5 cursor-pointer group transition-colors no-drag ${
+                                        dragOverWorkspaceId === ws.uuid
+                                            ? 'bg-purple-700/60 text-white outline outline-1 outline-purple-400'
+                                            : selectedWorkspaceId === ws.uuid
+                                                ? 'bg-purple-800/50 text-white'
+                                                : 'hover:bg-purple-900/30 text-gray-300'
+                                    } ${getWorkspaceSyncBorder(ws.uuid)}`}
+                                    onClick={() => onSelectWorkspace(ws.uuid)}
+                                    onDragOver={(e) => {
+                                        e.preventDefault()
+                                        if (dragOverWorkspaceId !== ws.uuid) setDragOverWorkspaceId(ws.uuid)
+                                    }}
+                                    onDragLeave={() => setDragOverWorkspaceId(null)}
+                                    onDrop={(e) => {
+                                        e.preventDefault()
+                                        setDragOverWorkspaceId(null)
+                                        const linkUuid = e.dataTransfer.getData('text/plain')
+                                        if (linkUuid && onDropLink) {
+                                            onDropLink(linkUuid, ws.uuid)
                                         }
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-red-400 text-gray-500 transition-colors shrink-0"
-                                    title="Delete workspace"
                                 >
-                                    <Trash2 size={12} />
-                                </button>
-                            </div>
-                        ))}
+                                    <span className="text-xs truncate flex-1">{ws.name}</span>
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                        <WorkspaceSyncIcon
+                                            wsUuid={ws.uuid}
+                                            syncingWorkspaceUuid={syncingWorkspaceUuid}
+                                            syncStatus={syncStatus}
+                                        />
+                                        {needsSync && onSyncWorkspaceById && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onSyncWorkspaceById(ws.uuid)
+                                                }}
+                                                disabled={isSyncing}
+                                                className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-purple-300 text-gray-500 transition-colors disabled:opacity-30"
+                                                title="Sync workspace"
+                                            >
+                                                <RefreshCw size={11} className={isSyncing ? 'animate-spin' : ''} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (confirm(`Delete workspace "${ws.name}"?`)) {
+                                                    onRemoveWorkspace(ws.uuid)
+                                                }
+                                            }}
+                                            className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-red-400 text-gray-500 transition-colors"
+                                            title="Delete workspace"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
 
                         {showNewWorkspaceInput ? (
                             <div className="flex gap-1 mt-1">
@@ -284,8 +362,8 @@ export default function WorkspaceSidebar({
                 )}
             </div>
 
-            {/* Sync Section */}
-            <div className="p-3 space-y-2">
+            {/* Sync Status Section */}
+            <div className="p-3 space-y-1.5">
                 {!isConnected && (
                     <p className="text-xs text-gray-600 text-center leading-relaxed">
                         {!apiUrl
@@ -299,7 +377,7 @@ export default function WorkspaceSidebar({
                 )}
 
                 {isConnected && selectedWorkspace && (
-                    <div className="space-y-2">
+                    <>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                                 <LinkIcon size={10} />
@@ -307,22 +385,12 @@ export default function WorkspaceSidebar({
                             </span>
                             <SyncStatusBadge syncStatus={syncStatus} syncError={syncError} />
                         </div>
-
-                        <button
-                            onClick={handleSync}
-                            disabled={syncStatus === 'syncing'}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors no-drag"
-                        >
-                            <RefreshCw size={12} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
-                            Sync "{selectedWorkspace.name}"
-                        </button>
-
                         {lastSynced && (
                             <p className="text-xs text-gray-600 text-center">
                                 Last synced: {new Date(lastSynced).toLocaleTimeString()}
                             </p>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
         </div>

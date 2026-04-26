@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import iconSrc from '/icon.png'
-import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -78,6 +78,7 @@ function App() {
         addWorkspace,
         removeWorkspace,
         mergeWorkspaces,
+        reconcileWorkspaceUuid,
         selectedWorkspaceId,
         selectWorkspace,
         selectedWorkspace,
@@ -85,12 +86,14 @@ function App() {
     } = useWorkspaces()
 
     const {
+        links,
         addLink,
         removeLink,
         moveLinkWorkspace,
         removeLinksForWorkspace,
         getLinksForWorkspace,
         mergeLinks,
+        updateLinksWorkspaceId,
         loaded: linksLoaded
     } = useLinks()
 
@@ -100,11 +103,17 @@ function App() {
         connectionStatus,
         testConnection,
         syncWorkspace,
+        syncSingleLink,
         pullSync,
         lastSynced,
         syncStatus,
-        syncError
+        syncError,
+        syncAnalysis,
+        runAnalysis
     } = useSync()
+
+    const [syncingLinkUuid, setSyncingLinkUuid] = useState(null)
+    const [syncingWorkspaceUuid, setSyncingWorkspaceUuid] = useState(null)
 
     // Links for the currently selected workspace
     const workspaceLinks = selectedWorkspaceId ? getLinksForWorkspace(selectedWorkspaceId) : []
@@ -200,6 +209,16 @@ function App() {
     const applyPull = async () => {
         const result = await pullSync()
         if (result.ok && result.data) {
+            // Run analysis before merging — compare current local state vs server
+            const { uuidReconciliation } = await runAnalysis(workspaces, links, result.data)
+
+            // Apply UUID reconciliation (server UUID is authoritative)
+            for (const [oldUuid, newUuid] of Object.entries(uuidReconciliation)) {
+                reconcileWorkspaceUuid(oldUuid, newUuid)
+                updateLinksWorkspaceId(oldUuid, newUuid)
+            }
+
+            // Merge items that exist on server but not locally
             mergeWorkspaces(result.data.workspaces)
             mergeLinks(result.data.links)
         }
@@ -215,6 +234,25 @@ function App() {
         if (!selectedWorkspace) return
         await syncWorkspace(selectedWorkspace, workspaceLinks)
         applyPull()
+    }
+
+    const handleSyncWorkspaceById = async (workspaceUuid) => {
+        const ws = workspaces.find((w) => w.uuid === workspaceUuid)
+        if (!ws) return
+        const wsLinks = getLinksForWorkspace(workspaceUuid)
+        setSyncingWorkspaceUuid(workspaceUuid)
+        await syncWorkspace(ws, wsLinks)
+        applyPull()
+        setTimeout(() => setSyncingWorkspaceUuid(null), 3000)
+    }
+
+    const handleSyncSingleLink = async (link) => {
+        const ws = workspaces.find((w) => w.uuid === link.workspaceId)
+        if (!ws) return
+        const allWsLinks = getLinksForWorkspace(link.workspaceId)
+        setSyncingLinkUuid(link.uuid)
+        await syncSingleLink(ws, link, allWsLinks)
+        setSyncingLinkUuid(null)
     }
 
     const cleanUrl = (url) => url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
@@ -363,11 +401,14 @@ function App() {
                     connectionStatus={connectionStatus}
                     onTestConnection={handleTestConnection}
                     onSyncWorkspace={handleSyncWorkspace}
+                    onSyncWorkspaceById={handleSyncWorkspaceById}
                     selectedWorkspace={selectedWorkspace}
                     linksCount={workspaceLinks.length}
                     lastSynced={lastSynced}
                     syncStatus={syncStatus}
                     syncError={syncError}
+                    syncAnalysis={syncAnalysis}
+                    syncingWorkspaceUuid={syncingWorkspaceUuid}
                     onClose={() => setIsWorkspaceSidebarOpen(false)}
                     onDropLink={handleMoveLink}
                 />
@@ -483,7 +524,11 @@ function App() {
                                             e.dataTransfer.setData('text/plain', item.uuid)
                                             e.dataTransfer.effectAllowed = 'move'
                                         }}
-                                        className="bg-[#1a0f2e] p-4 border border-purple-900/30 flex items-center justify-between group hover:border-purple-500/50 transition-colors w-full min-w-0"
+                                        className={`bg-[#1a0f2e] p-4 border border-purple-900/30 flex items-center justify-between group transition-colors w-full min-w-0 ${
+                                            connectionStatus === 'connected' && syncAnalysis?.links?.[item.uuid] === 'unsynced'
+                                                ? 'border-l-2 border-l-red-500/60 hover:border-l-red-400/80'
+                                                : 'hover:border-purple-500/50'
+                                        }`}
                                     >
                                         <div
                                             className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
@@ -505,6 +550,21 @@ function App() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0 relative">
+                                            {connectionStatus === 'connected' && syncAnalysis?.links?.[item.uuid] === 'unsynced' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleSyncSingleLink(item)
+                                                    }}
+                                                    disabled={syncingLinkUuid === item.uuid}
+                                                    className={`p-2 text-gray-500 hover:text-purple-400 hover:bg-purple-900/20 transition-colors disabled:opacity-50 ${syncingLinkUuid === item.uuid ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                                    title="Sync this link"
+                                                >
+                                                    {syncingLinkUuid === item.uuid
+                                                        ? <Loader size={18} className="animate-spin" />
+                                                        : <Upload size={18} />}
+                                                </button>
+                                            )}
                                             <div className="relative">
                                                 <button
                                                     onClick={(e) => {
