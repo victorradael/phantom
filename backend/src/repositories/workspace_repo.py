@@ -67,7 +67,7 @@ async def delete_by_uuid(pool: asyncpg.Pool, uuid: str) -> None:
 
 
 async def upsert_by_uuid(
-    pool: asyncpg.Pool, uuid: str, name: str
+    pool: asyncpg.Connection | asyncpg.Pool, uuid: str, name: str
 ) -> Workspace:
     row = await pool.fetchrow(
         """

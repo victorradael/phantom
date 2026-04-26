@@ -87,6 +87,38 @@ async def delete_by_uuid(pool: asyncpg.Pool, uuid: str) -> None:
     await pool.execute("DELETE FROM links WHERE uuid = $1::uuid", uuid)
 
 
+async def bulk_upsert(
+    conn: asyncpg.Connection | asyncpg.Pool,
+    links: list,
+    workspace_id: int,
+) -> None:
+    if not links:
+        return
+    uuids = [l.uuid for l in links]
+    urls = [l.url for l in links]
+    names = [l.name for l in links]
+    descriptions = [l.description for l in links]
+    await conn.execute(
+        """
+        INSERT INTO links (uuid, url, name, description, workspace_id)
+        SELECT d.uuid::uuid, d.url, d.name, d.description, $5
+          FROM unnest($1::text[], $2::text[], $3::text[], $4::text[])
+               AS d(uuid, url, name, description)
+        ON CONFLICT (uuid)
+          DO UPDATE SET url          = EXCLUDED.url,
+                        name         = EXCLUDED.name,
+                        description  = EXCLUDED.description,
+                        workspace_id = EXCLUDED.workspace_id,
+                        updated_at   = now()
+        """,
+        uuids,
+        urls,
+        names,
+        descriptions,
+        workspace_id,
+    )
+
+
 async def upsert_by_uuid(
     pool: asyncpg.Pool,
     uuid: str,
