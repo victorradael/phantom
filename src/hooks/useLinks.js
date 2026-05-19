@@ -58,6 +58,20 @@ export function useLinks() {
         setLinks((prev) => prev.filter((l) => l.uuid !== uuid))
     }
 
+    const editLink = (uuid, newUrl, newName, newDescription) => {
+        setLinks((prev) => prev.map((l) =>
+            l.uuid === uuid
+                ? {
+                    ...l,
+                    url: newUrl,
+                    name: newName?.trim() || '',
+                    description: newDescription?.trim() || '',
+                    updatedAt: new Date().toISOString()
+                  }
+                : l
+        ))
+    }
+
     const moveLinkWorkspace = (uuid, newWorkspaceId) => {
         setLinks((prev) => prev.map((l) =>
             l.uuid === uuid ? { ...l, workspaceId: newWorkspaceId, updatedAt: new Date().toISOString() } : l
@@ -98,5 +112,5 @@ export function useLinks() {
         })
     }
 
-    return { links, addLink, removeLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, updateLinksWorkspaceId, loaded }
+    return { links, addLink, removeLink, editLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, updateLinksWorkspaceId, loaded }
 }

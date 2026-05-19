@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import iconSrc from '/icon.png'
-import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader, Pencil, Check, X } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -66,6 +66,9 @@ function App() {
     const [migrated, setMigrated] = useState(false)
     const [openMoveDropdownId, setOpenMoveDropdownId] = useState(null)
     const [toastMessage, setToastMessage] = useState(null)
+    const [editingLinkId, setEditingLinkId] = useState(null)
+    const [editUrl, setEditUrl] = useState('')
+    const [editAlias, setEditAlias] = useState('')
 
     // Splash screen
     const [showSplash, setShowSplash] = useState(true)
@@ -91,6 +94,7 @@ function App() {
         links,
         addLink,
         removeLink,
+        editLink,
         moveLinkWorkspace,
         removeLinksForWorkspace,
         getLinksForWorkspace,
@@ -188,6 +192,38 @@ function App() {
             setNewUrl('')
             setNewAlias('')
         }
+    }
+
+    const handleStartEdit = (e, item) => {
+        e.stopPropagation()
+        setEditingLinkId(item.uuid)
+        setEditUrl(item.url)
+        setEditAlias(item.name || '')
+    }
+
+    const handleCancelEdit = (e) => {
+        if (e) e.stopPropagation()
+        setEditingLinkId(null)
+        setEditUrl('')
+        setEditAlias('')
+    }
+
+    const handleSaveEdit = (e, item) => {
+        e.stopPropagation()
+        const newUrl = sanitizeUrl(editUrl)
+        if (!newUrl) {
+            alert('Invalid URL or unsupported protocol. Use http:// or https://')
+            return
+        }
+        editLink(item.uuid, newUrl, editAlias, '')
+        
+        if (connectionStatus === 'connected' && apiUrl) {
+            window.api.updateSyncedLink({ apiUrl, uuid: item.uuid, payload: { url: newUrl, name: editAlias } })
+        }
+        
+        setEditingLinkId(null)
+        setEditUrl('')
+        setEditAlias('')
     }
 
     const handleRemoveLink = (uuid) => {
@@ -541,81 +577,133 @@ function App() {
                                                 : 'hover:border-purple-500/50'
                                         }`}
                                     >
-                                        <div
-                                            className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
-                                            onClick={() => {
-                                                const safe = sanitizeUrl(item.url)
-                                                if (safe) setCurrentUrl(safe)
-                                            }}
-                                        >
-                                            <div className="w-10 h-10 bg-[#0d0a14] flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
-                                                <PageIcon url={item.url} />
+                                        {editingLinkId === item.uuid ? (
+                                            <div className="flex-1 flex flex-col gap-2 mr-4" onClick={(e) => e.stopPropagation()}>
+                                                <input
+                                                    type="text"
+                                                    value={editUrl}
+                                                    onChange={(e) => setEditUrl(e.target.value)}
+                                                    className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm text-gray-200"
+                                                    placeholder="URL"
+                                                    autoFocus
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={editAlias}
+                                                    onChange={(e) => setEditAlias(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleSaveEdit(e, item)
+                                                        if (e.key === 'Escape') handleCancelEdit(e)
+                                                    }}
+                                                    className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm text-gray-200"
+                                                    placeholder="Name"
+                                                />
                                             </div>
-                                            <div className="min-w-0 truncate">
-                                                <h3 className="font-semibold text-gray-100 truncate">
-                                                    {item.name || cleanUrl(item.url)}
-                                                </h3>
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {item.name ? cleanUrl(item.url) : 'Click to open'}
-                                                </p>
+                                        ) : (
+                                            <div
+                                                className="flex-1 cursor-pointer flex items-center gap-4 min-w-0 mr-4"
+                                                onClick={() => {
+                                                    const safe = sanitizeUrl(item.url)
+                                                    if (safe) setCurrentUrl(safe)
+                                                }}
+                                            >
+                                                <div className="w-10 h-10 bg-[#0d0a14] flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
+                                                    <PageIcon url={item.url} />
+                                                </div>
+                                                <div className="min-w-0 truncate">
+                                                    <h3 className="font-semibold text-gray-100 truncate">
+                                                        {item.name || cleanUrl(item.url)}
+                                                    </h3>
+                                                    <p className="text-xs text-gray-500 truncate">
+                                                        {item.name ? cleanUrl(item.url) : 'Click to open'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                         <div className="flex items-center gap-1 shrink-0 relative">
-                                            {connectionStatus === 'connected' && syncAnalysis?.lastAnalyzedAt && syncAnalysis?.links?.[item.uuid] !== 'synced' && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleSyncSingleLink(item)
-                                                    }}
-                                                    disabled={syncingLinkUuid === item.uuid}
-                                                    className={`p-2 text-gray-500 hover:text-purple-400 hover:bg-purple-900/20 transition-colors disabled:opacity-50 ${syncingLinkUuid === item.uuid ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                                    title="Sync this link"
-                                                >
-                                                    {syncingLinkUuid === item.uuid
-                                                        ? <Loader size={18} className="animate-spin" />
-                                                        : <Upload size={18} />}
-                                                </button>
-                                            )}
-                                            <div className="relative">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setOpenMoveDropdownId(openMoveDropdownId === item.uuid ? null : item.uuid)
-                                                    }}
-                                                    className="p-2 text-gray-500 hover:text-blue-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                                                    title="Move to another workspace"
-                                                >
-                                                    <ArrowRight size={18} />
-                                                </button>
-                                                {openMoveDropdownId === item.uuid && (
-                                                    <div className="absolute right-0 mt-1 w-48 bg-[#1a0f2e] border border-purple-900/40 shadow-xl z-50 py-1">
-                                                        <div className="px-3 py-1 text-xs text-gray-500 border-b border-purple-900/30">Move to...</div>
-                                                        {workspaces.filter(w => w.uuid !== selectedWorkspaceId).map(w => (
-                                                            <button
-                                                                key={w.uuid}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    handleMoveLink(item.uuid, w.uuid)
-                                                                    setOpenMoveDropdownId(null)
-                                                                }}
-                                                                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-purple-800/40 hover:text-white transition-colors truncate"
-                                                            >
-                                                                {w.name}
-                                                            </button>
-                                                        ))}
-                                                        {workspaces.length <= 1 && (
-                                                            <div className="px-3 py-2 text-sm text-gray-600">No other workspaces</div>
+                                            {editingLinkId === item.uuid ? (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => handleSaveEdit(e, item)}
+                                                        className="p-2 text-green-500 hover:bg-purple-900/20 transition-colors"
+                                                        title="Save"
+                                                    >
+                                                        <Check size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="p-2 text-red-500 hover:bg-purple-900/20 transition-colors"
+                                                        title="Cancel"
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {connectionStatus === 'connected' && syncAnalysis?.lastAnalyzedAt && syncAnalysis?.links?.[item.uuid] !== 'synced' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleSyncSingleLink(item)
+                                                            }}
+                                                            disabled={syncingLinkUuid === item.uuid}
+                                                            className={`p-2 text-gray-500 hover:text-purple-400 hover:bg-purple-900/20 transition-colors disabled:opacity-50 ${syncingLinkUuid === item.uuid ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                                            title="Sync this link"
+                                                        >
+                                                            {syncingLinkUuid === item.uuid
+                                                                ? <Loader size={18} className="animate-spin" />
+                                                                : <Upload size={18} />}
+                                                        </button>
+                                                    )}
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setOpenMoveDropdownId(openMoveDropdownId === item.uuid ? null : item.uuid)
+                                                            }}
+                                                            className="p-2 text-gray-500 hover:text-blue-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                            title="Move to another workspace"
+                                                        >
+                                                            <ArrowRight size={18} />
+                                                        </button>
+                                                        {openMoveDropdownId === item.uuid && (
+                                                            <div className="absolute right-0 mt-1 w-48 bg-[#1a0f2e] border border-purple-900/40 shadow-xl z-50 py-1">
+                                                                <div className="px-3 py-1 text-xs text-gray-500 border-b border-purple-900/30">Move to...</div>
+                                                                {workspaces.filter(w => w.uuid !== selectedWorkspaceId).map(w => (
+                                                                    <button
+                                                                        key={w.uuid}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            handleMoveLink(item.uuid, w.uuid)
+                                                                            setOpenMoveDropdownId(null)
+                                                                        }}
+                                                                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-purple-800/40 hover:text-white transition-colors truncate"
+                                                                    >
+                                                                        {w.name}
+                                                                    </button>
+                                                                ))}
+                                                                {workspaces.length <= 1 && (
+                                                                    <div className="px-3 py-2 text-sm text-gray-600">No other workspaces</div>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveLink(item.uuid)}
-                                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Remove"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                                    <button
+                                                        onClick={(e) => handleStartEdit(e, item)}
+                                                        className="p-2 text-gray-500 hover:text-green-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRemoveLink(item.uuid)}
+                                                        className="p-2 text-gray-500 hover:text-red-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Remove"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
