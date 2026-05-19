@@ -27,7 +27,7 @@ export function useWorkspaces() {
         const existing = workspaces.find((w) => w.name.toLowerCase() === trimmedName.toLowerCase())
         if (existing) {
             setSelectedWorkspaceId(existing.uuid)
-            return existing
+            return { workspace: existing, isDuplicate: true }
         }
 
         const workspace = {
@@ -39,7 +39,7 @@ export function useWorkspaces() {
         }
         setWorkspaces((prev) => [...prev, workspace])
         setSelectedWorkspaceId(workspace.uuid)
-        return workspace
+        return { workspace, isDuplicate: false }
     }
 
     const removeWorkspace = (uuid) => {

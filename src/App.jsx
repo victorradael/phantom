@@ -7,6 +7,7 @@ import UpdateNotifier from './components/UpdateNotifier'
 import GhostLogo from './components/GhostLogo'
 import WorkspaceSidebar from './components/WorkspaceSidebar'
 import SplashScreen from './components/SplashScreen'
+import Toast from './components/Toast'
 import { useWorkspaces } from './hooks/useWorkspaces'
 import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
@@ -64,6 +65,7 @@ function App() {
     const dashboardRef = useRef(null)
     const [migrated, setMigrated] = useState(false)
     const [openMoveDropdownId, setOpenMoveDropdownId] = useState(null)
+    const [toastMessage, setToastMessage] = useState(null)
 
     // Splash screen
     const [showSplash, setShowSplash] = useState(true)
@@ -179,9 +181,13 @@ function App() {
             alert('Invalid URL or unsupported protocol. Use http:// or https://')
             return
         }
-        addLink(urlToAdd, newAlias, '', selectedWorkspaceId)
-        setNewUrl('')
-        setNewAlias('')
+        const { isDuplicate } = addLink(urlToAdd, newAlias, '', selectedWorkspaceId)
+        if (isDuplicate) {
+            setToastMessage('Este link já existe neste workspace.')
+        } else {
+            setNewUrl('')
+            setNewAlias('')
+        }
     }
 
     const handleRemoveLink = (uuid) => {
@@ -415,6 +421,7 @@ function App() {
                     syncingWorkspaceUuid={syncingWorkspaceUuid}
                     onClose={() => setIsWorkspaceSidebarOpen(false)}
                     onDropLink={handleMoveLink}
+                    setToastMessage={setToastMessage}
                 />
             )}
 
@@ -673,6 +680,7 @@ function App() {
                 Ctrl + Q to close
             </div>
 
+            <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
             <UpdateNotifier />
         </div>
     )

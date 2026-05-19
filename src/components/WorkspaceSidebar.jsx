@@ -83,7 +83,8 @@ export default function WorkspaceSidebar({
     syncAnalysis,
     syncingWorkspaceUuid,
     onClose,
-    onDropLink
+    onDropLink,
+    setToastMessage
 }) {
     const [newWorkspaceName, setNewWorkspaceName] = useState('')
     const [showNewWorkspaceInput, setShowNewWorkspaceInput] = useState(false)
@@ -97,9 +98,13 @@ export default function WorkspaceSidebar({
 
     const handleAddWorkspace = () => {
         if (!newWorkspaceName.trim()) return
-        onAddWorkspace(newWorkspaceName)
-        setNewWorkspaceName('')
-        setShowNewWorkspaceInput(false)
+        const { isDuplicate } = onAddWorkspace(newWorkspaceName)
+        if (isDuplicate) {
+            setToastMessage?.('Este workspace já existe.')
+        } else {
+            setNewWorkspaceName('')
+            setShowNewWorkspaceInput(false)
+        }
     }
 
     const handleApiUrlBlur = () => {

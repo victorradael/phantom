@@ -37,7 +37,7 @@ export function useLinks() {
                         : l
                 ))
             }
-            return existing
+            return { link: existing, isDuplicate: true }
         }
 
         const link = {
@@ -51,7 +51,7 @@ export function useLinks() {
             updatedAt: new Date().toISOString()
         }
         setLinks((prev) => [...prev, link])
-        return link
+        return { link, isDuplicate: false }
     }
 
     const removeLink = (uuid) => {
