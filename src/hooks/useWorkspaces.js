@@ -23,10 +23,17 @@ export function useWorkspaces() {
     }, [workspaces, loaded])
 
     const addWorkspace = (name) => {
+        const trimmedName = name.trim()
+        const existing = workspaces.find((w) => w.name.toLowerCase() === trimmedName.toLowerCase())
+        if (existing) {
+            setSelectedWorkspaceId(existing.uuid)
+            return existing
+        }
+
         const workspace = {
             id: Date.now(),
             uuid: crypto.randomUUID(),
-            name: name.trim(),
+            name: trimmedName,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         }

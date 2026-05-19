@@ -18,12 +18,34 @@ export function useLinks() {
     }, [links, loaded])
 
     const addLink = (url, name, description, workspaceId) => {
+        const trimmedName = name?.trim() || ''
+        const trimmedDescription = description?.trim() || ''
+
+        // Find existing link with same URL in the same workspace
+        const existing = links.find((l) => l.url === url && l.workspaceId === workspaceId)
+        if (existing) {
+            // Update name and description if new ones are provided
+            if (trimmedName || trimmedDescription) {
+                setLinks((prev) => prev.map((l) => 
+                    l.uuid === existing.uuid 
+                        ? { 
+                            ...l, 
+                            name: trimmedName || l.name, 
+                            description: trimmedDescription || l.description,
+                            updatedAt: new Date().toISOString()
+                          } 
+                        : l
+                ))
+            }
+            return existing
+        }
+
         const link = {
             id: Date.now(),
             uuid: crypto.randomUUID(),
             url,
-            name: name?.trim() || '',
-            description: description?.trim() || '',
+            name: trimmedName,
+            description: trimmedDescription,
             workspaceId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
