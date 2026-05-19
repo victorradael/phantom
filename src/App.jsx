@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import iconSrc from '/icon.png'
-import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader, Pencil, Check, X } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader, Pencil, Check, X, Copy } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -688,6 +688,17 @@ function App() {
                                                             </div>
                                                         )}
                                                     </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            navigator.clipboard.writeText(item.url)
+                                                            setToastMessage('Link copiado para a área de transferência')
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-blue-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Copy URL"
+                                                    >
+                                                        <Copy size={18} />
+                                                    </button>
                                                     <button
                                                         onClick={(e) => handleStartEdit(e, item)}
                                                         className="p-2 text-gray-500 hover:text-green-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
