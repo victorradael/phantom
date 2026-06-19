@@ -169,6 +169,26 @@ function createWindow() {
         return mainWindow.isAlwaysOnTop()
     })
 
+    // Mini Player mode — shrink the window to a compact bar, remember bounds to restore later
+    let preMiniPlayerBounds = null
+
+    rateLimitedHandle('enter-mini-player', 20, 1000, () => {
+        if (!preMiniPlayerBounds) preMiniPlayerBounds = mainWindow.getBounds()
+        const { x, y } = mainWindow.getBounds()
+        mainWindow.setResizable(false)
+        mainWindow.setBounds({ x, y, width: 380, height: 84 })
+        return true
+    })
+
+    rateLimitedHandle('exit-mini-player', 20, 1000, () => {
+        mainWindow.setResizable(true)
+        if (preMiniPlayerBounds) {
+            mainWindow.setBounds(preMiniPlayerBounds)
+            preMiniPlayerBounds = null
+        }
+        return true
+    })
+
     // URL Persistence IPC with safeStorage encryption (FIX-9)
     // Falls back to plain storage when safeStorage is unavailable (headless Linux).
     // On first run with existing unencrypted data, migrates to encrypted format.

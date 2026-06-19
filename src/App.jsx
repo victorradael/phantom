@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import iconSrc from '/icon.png'
-import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader, Pencil, Check, X, Copy } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Pin, PinOff, Shield, SidebarClose, Globe, Layers, ArrowRight, Upload, Loader, Pencil, Check, X, Copy, Minimize2 } from 'lucide-react'
 import ScrollIndicator from './components/ScrollIndicator'
 import InteractiveBackground from './components/InteractiveBackground'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -9,6 +9,7 @@ import WorkspaceSidebar from './components/WorkspaceSidebar'
 import SplashScreen from './components/SplashScreen'
 import Toast from './components/Toast'
 import SearchBar from './components/SearchBar'
+import MiniPlayer from './components/MiniPlayer'
 import { useWorkspaces } from './hooks/useWorkspaces'
 import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
@@ -321,6 +322,21 @@ function App() {
     const [sidebarWidth, setSidebarWidth] = useState(350)
     const [isResizing, setIsResizing] = useState(false)
 
+    // Mini Player mode
+    const [isMiniPlayerActive, setIsMiniPlayerActive] = useState(false)
+    const [canGoBack, setCanGoBack] = useState(false)
+    const [canGoForward, setCanGoForward] = useState(false)
+
+    const handleEnterMiniPlayer = () => {
+        setIsMiniPlayerActive(true)
+        window.api?.enterMiniPlayer()
+    }
+
+    const handleExitMiniPlayer = () => {
+        setIsMiniPlayerActive(false)
+        window.api?.exitMiniPlayer()
+    }
+
     useEffect(() => {
         const webview = webviewRef.current
         if (!webview) return
@@ -330,13 +346,21 @@ function App() {
         }
         const handleStart = () => setPageTitle('Materializing...')
         const handleTitle = (e) => setPageTitle(e.title)
+        const handleNavigate = () => {
+            setCanGoBack(webview.canGoBack())
+            setCanGoForward(webview.canGoForward())
+        }
         webview.addEventListener('did-fail-load', handleFail)
         webview.addEventListener('did-start-loading', handleStart)
         webview.addEventListener('page-title-updated', handleTitle)
+        webview.addEventListener('did-navigate', handleNavigate)
+        webview.addEventListener('did-navigate-in-page', handleNavigate)
         return () => {
             webview.removeEventListener('did-fail-load', handleFail)
             webview.removeEventListener('did-start-loading', handleStart)
             webview.removeEventListener('page-title-updated', handleTitle)
+            webview.removeEventListener('did-navigate', handleNavigate)
+            webview.removeEventListener('did-navigate-in-page', handleNavigate)
         }
     }, [currentUrl])
 
@@ -367,54 +391,76 @@ function App() {
 
     const renderBrowser = () => (
         <div className="flex-1 flex flex-col h-full relative overflow-hidden">
-            <div className="h-10 bg-[#0d0a14] border-b border-purple-900/40 flex items-center px-4 justify-between draggable shrink-0">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <button
-                        onClick={() => { setCurrentUrl(''); setLoadError(null) }}
-                        className="p-1.5 hover:bg-purple-900/30 text-gray-300 no-drag shrink-0"
-                        title="Back to Dashboard"
-                    >
-                        <ArrowLeft size={16} />
-                    </button>
-                    <div className="flex items-center gap-2 min-w-0">
-                        <div className="scale-75 origin-left w-5 h-5 flex items-center justify-center shrink-0">
-                            <PageIcon url={currentUrl} eager={true} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-medium text-gray-200 truncate leading-tight">
-                                {pageTitle || 'Browser'}
-                            </span>
-                            <span className="text-[10px] text-gray-500 truncate leading-tight opacity-70">
-                                {currentUrl}
-                            </span>
+            {isMiniPlayerActive ? (
+                <div className="h-full border-b border-purple-900/40 shrink-0">
+                    <MiniPlayer
+                        title={pageTitle}
+                        url={currentUrl}
+                        canGoBack={canGoBack}
+                        canGoForward={canGoForward}
+                        onBack={() => webviewRef.current?.goBack()}
+                        onForward={() => webviewRef.current?.goForward()}
+                        onReload={() => webviewRef.current?.reload()}
+                        onRestore={handleExitMiniPlayer}
+                    />
+                </div>
+            ) : (
+                <div className="h-10 bg-[#0d0a14] border-b border-purple-900/40 flex items-center px-4 justify-between draggable shrink-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <button
+                            onClick={() => { setCurrentUrl(''); setLoadError(null) }}
+                            className="p-1.5 hover:bg-purple-900/30 text-gray-300 no-drag shrink-0"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="scale-75 origin-left w-5 h-5 flex items-center justify-center shrink-0">
+                                <PageIcon url={currentUrl} eager={true} />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-xs font-medium text-gray-200 truncate leading-tight">
+                                    {pageTitle || 'Browser'}
+                                </span>
+                                <span className="text-[10px] text-gray-500 truncate leading-tight opacity-70">
+                                    {currentUrl}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={handleEnterMiniPlayer}
+                            className="p-1.5 no-drag hover:bg-purple-900/30 text-gray-400"
+                            title="Minimize Player"
+                        >
+                            <Minimize2 size={16} />
+                        </button>
+                        <button
+                            onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
+                            className={`p-1.5 no-drag ${isWorkspaceSidebarOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                            title="Toggle Workspace Sidebar"
+                        >
+                            <Layers size={16} />
+                        </button>
+                        <button
+                            onClick={toggleAlwaysOnTop}
+                            className={`p-1.5 no-drag ${isAlwaysOnTop ? 'bg-purple-700/60 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                            title="Toggle Always on Top"
+                        >
+                            {isAlwaysOnTop ? <Pin size={16} /> : <PinOff size={16} />}
+                        </button>
+                        <button
+                            onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
+                            className={`p-1.5 no-drag ${isBitwardenOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
+                            title="Toggle Bitwarden Sidebar"
+                        >
+                            {isBitwardenOpen ? <SidebarClose size={16} /> : <Shield size={16} />}
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
-                        className={`p-1.5 no-drag ${isWorkspaceSidebarOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
-                        title="Toggle Workspace Sidebar"
-                    >
-                        <Layers size={16} />
-                    </button>
-                    <button
-                        onClick={toggleAlwaysOnTop}
-                        className={`p-1.5 no-drag ${isAlwaysOnTop ? 'bg-purple-700/60 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
-                        title="Toggle Always on Top"
-                    >
-                        {isAlwaysOnTop ? <Pin size={16} /> : <PinOff size={16} />}
-                    </button>
-                    <button
-                        onClick={() => setIsBitwardenOpen(!isBitwardenOpen)}
-                        className={`p-1.5 no-drag ${isBitwardenOpen ? 'bg-purple-800/40 text-white' : 'hover:bg-purple-900/30 text-gray-400'}`}
-                        title="Toggle Bitwarden Sidebar"
-                    >
-                        {isBitwardenOpen ? <SidebarClose size={16} /> : <Shield size={16} />}
-                    </button>
-                </div>
-            </div>
-            <div className="flex-1 w-full bg-white relative">
+            )}
+            <div className={`flex-1 w-full bg-white relative ${isMiniPlayerActive ? 'hidden' : ''}`}>
                 {loadError && (
                     <div className="absolute inset-0 z-10 bg-[#0d0a14] flex flex-col items-center justify-center p-8 text-center">
                         <img src={iconSrc} alt="Phantom" className="w-16 h-16 mb-4 opacity-50" />
@@ -783,9 +829,11 @@ function App() {
             )}
 
             {/* Watermark Helper */}
-            <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-[#0d0a14]/80 px-2 py-1 border border-purple-900/20 z-[100]">
-                Ctrl + Q to close
-            </div>
+            {!isMiniPlayerActive && (
+                <div className="fixed bottom-4 right-4 text-[10px] text-gray-600 pointer-events-none select-none uppercase tracking-widest bg-[#0d0a14]/80 px-2 py-1 border border-purple-900/20 z-[100]">
+                    Ctrl + Q to close
+                </div>
+            )}
 
             <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
             <UpdateNotifier />

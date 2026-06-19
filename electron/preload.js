@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('api', {
     toggleAlwaysOnTop:    () => ipcRenderer.invoke('toggle-always-on-top'),
     getAlwaysOnTop:       () => ipcRenderer.invoke('get-always-on-top'),
+    enterMiniPlayer:      () => ipcRenderer.invoke('enter-mini-player'),
+    exitMiniPlayer:       () => ipcRenderer.invoke('exit-mini-player'),
     openExtensionsFolder: () => ipcRenderer.invoke('open-extensions-folder'),
     installBitwarden:     () => ipcRenderer.invoke('install-bitwarden'),
     getUrls:              () => ipcRenderer.invoke('get-urls'),
