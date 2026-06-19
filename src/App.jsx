@@ -8,6 +8,7 @@ import GhostLogo from './components/GhostLogo'
 import WorkspaceSidebar from './components/WorkspaceSidebar'
 import SplashScreen from './components/SplashScreen'
 import Toast from './components/Toast'
+import SearchBar from './components/SearchBar'
 import { useWorkspaces } from './hooks/useWorkspaces'
 import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
@@ -240,6 +241,12 @@ function App() {
         if (connectionStatus === 'connected' && apiUrl) {
             window.api.updateSyncedLink({ apiUrl, uuid, payload: { workspace_uuid: targetWorkspaceId } })
         }
+    }
+
+    const handleSearchSelect = (link) => {
+        selectWorkspace(link.workspaceId)
+        const safe = sanitizeUrl(link.url)
+        if (safe) setCurrentUrl(safe)
     }
 
     const handleRemoveWorkspace = (uuid) => {
@@ -493,6 +500,7 @@ function App() {
                                     </span>
                                 )}
                             </h1>
+                            <SearchBar links={links} workspaces={workspaces} onSelectLink={handleSearchSelect} />
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setIsWorkspaceSidebarOpen(!isWorkspaceSidebarOpen)}
