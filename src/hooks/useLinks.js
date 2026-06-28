@@ -17,23 +17,21 @@ export function useLinks() {
         }
     }, [links, loaded])
 
-    const addLink = (url, name, description, workspaceId) => {
+    const addLink = (url, name, description, workspaceId, tagUuids = []) => {
         const trimmedName = name?.trim() || ''
         const trimmedDescription = description?.trim() || ''
 
-        // Find existing link with same URL in the same workspace
         const existing = links.find((l) => l.url === url && l.workspaceId === workspaceId)
         if (existing) {
-            // Update name and description if new ones are provided
             if (trimmedName || trimmedDescription) {
-                setLinks((prev) => prev.map((l) => 
-                    l.uuid === existing.uuid 
-                        ? { 
-                            ...l, 
-                            name: trimmedName || l.name, 
+                setLinks((prev) => prev.map((l) =>
+                    l.uuid === existing.uuid
+                        ? {
+                            ...l,
+                            name: trimmedName || l.name,
                             description: trimmedDescription || l.description,
                             updatedAt: new Date().toISOString()
-                          } 
+                          }
                         : l
                 ))
             }
@@ -47,6 +45,7 @@ export function useLinks() {
             name: trimmedName,
             description: trimmedDescription,
             workspaceId,
+            tagUuids: tagUuids.slice(0, 3),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         }
@@ -58,7 +57,7 @@ export function useLinks() {
         setLinks((prev) => prev.filter((l) => l.uuid !== uuid))
     }
 
-    const editLink = (uuid, newUrl, newName, newDescription) => {
+    const editLink = (uuid, newUrl, newName, newDescription, tagUuids) => {
         setLinks((prev) => prev.map((l) =>
             l.uuid === uuid
                 ? {
@@ -66,6 +65,7 @@ export function useLinks() {
                     url: newUrl,
                     name: newName?.trim() || '',
                     description: newDescription?.trim() || '',
+                    tagUuids: tagUuids !== undefined ? tagUuids.slice(0, 3) : (l.tagUuids || []),
                     updatedAt: new Date().toISOString()
                   }
                 : l
@@ -92,7 +92,6 @@ export function useLinks() {
         return links.filter((l) => l.workspaceId === workspaceId)
     }
 
-    // Merge links from backend: adds new ones (by uuid), ignores existing
     const mergeLinks = (remoteLinks) => {
         setLinks((prev) => {
             const existingUuids = new Set(prev.map((l) => l.uuid))
@@ -105,6 +104,7 @@ export function useLinks() {
                     name: l.name || '',
                     description: l.description || '',
                     workspaceId: l.workspace_uuid,
+                    tagUuids: (l.tags || []).map((t) => t.uuid),
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 }))
@@ -112,5 +112,16 @@ export function useLinks() {
         })
     }
 
-    return { links, addLink, removeLink, editLink, moveLinkWorkspace, removeLinksForWorkspace, getLinksForWorkspace, mergeLinks, updateLinksWorkspaceId, loaded }
+    return {
+        links,
+        addLink,
+        removeLink,
+        editLink,
+        moveLinkWorkspace,
+        removeLinksForWorkspace,
+        getLinksForWorkspace,
+        mergeLinks,
+        updateLinksWorkspaceId,
+        loaded
+    }
 }

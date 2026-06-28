@@ -282,6 +282,16 @@ function createWindow() {
         return true
     })
 
+    // Tags persistence
+    rateLimitedHandle('get-tags', 20, 1000, () => {
+        return store.get('tags', [])
+    })
+
+    rateLimitedHandle('save-tags', 10, 1000, (_, tags) => {
+        store.set('tags', tags)
+        return true
+    })
+
     // Sync configuration persistence
     rateLimitedHandle('get-sync-config', 20, 1000, () => {
         return store.get('syncConfig', { apiUrl: '', lastSynced: null })

@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('api', {
     // Links
     getLinks:                    () => ipcRenderer.invoke('get-links'),
     saveLinks:           (links) => ipcRenderer.invoke('save-links', links),
+    // Tags
+    getTags:                     () => ipcRenderer.invoke('get-tags'),
+    saveTags:           (tags) => ipcRenderer.invoke('save-tags', tags),
     // Sync config
     getSyncConfig:               () => ipcRenderer.invoke('get-sync-config'),
     saveSyncConfig:     (config) => ipcRenderer.invoke('save-sync-config', config),

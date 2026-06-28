@@ -6,15 +6,24 @@ class WorkspaceSyncData(BaseModel):
     name: str
 
 
+class TagData(BaseModel):
+    uuid: str
+    name: str
+
+
 class LinkSyncData(BaseModel):
     uuid: str
     url: str
     name: str | None = None
     description: str | None = None
+    tags: list[TagData] = []
 
 
 class LinkUpdateData(BaseModel):
-    workspace_uuid: str
+    workspace_uuid: str | None = None
+    url: str | None = None
+    name: str | None = None
+    tags: list[TagData] | None = None
 
 
 class SyncRequest(BaseModel):
@@ -39,6 +48,7 @@ class PullLinkData(BaseModel):
     name: str | None = None
     description: str | None = None
     workspace_uuid: str
+    tags: list[TagData] = []
 
 
 class PullResponse(BaseModel):

@@ -13,6 +13,8 @@ import MiniPlayer from './components/MiniPlayer'
 import { useWorkspaces } from './hooks/useWorkspaces'
 import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
+import { useTags } from './hooks/useTags'
+import TagInput from './components/TagInput'
 
 // FIX-6: Removed Google fallback to prevent hostname leakage to a third-party.
 function PageIcon({ url, eager = true }) {
@@ -71,6 +73,9 @@ function App() {
     const [editingLinkId, setEditingLinkId] = useState(null)
     const [editUrl, setEditUrl] = useState('')
     const [editAlias, setEditAlias] = useState('')
+    const [editTagNames, setEditTagNames] = useState([])
+    const [newTagNames, setNewTagNames] = useState([])
+    const [activeTagFilter, setActiveTagFilter] = useState([])
 
     // Splash screen
     const [showSplash, setShowSplash] = useState(true)
@@ -121,11 +126,26 @@ function App() {
         removeAnalysisEntries
     } = useSync()
 
+    const { tags, getOrCreateTag, mergeTags } = useTags()
+
     const [syncingLinkUuid, setSyncingLinkUuid] = useState(null)
     const [syncingWorkspaceUuid, setSyncingWorkspaceUuid] = useState(null)
 
     // Links for the currently selected workspace
     const workspaceLinks = selectedWorkspaceId ? getLinksForWorkspace(selectedWorkspaceId) : []
+
+    // Unique tags used by links in the current workspace (for filter bar)
+    const workspaceTags = (() => {
+        const usedUuids = new Set(workspaceLinks.flatMap((l) => l.tagUuids || []))
+        return tags.filter((t) => usedUuids.has(t.uuid))
+    })()
+
+    // AND filter: only show links that have ALL active filter tags
+    const filteredLinks = activeTagFilter.length === 0
+        ? workspaceLinks
+        : workspaceLinks.filter((l) =>
+            activeTagFilter.every((uuid) => (l.tagUuids || []).includes(uuid))
+          )
 
     // Migration: on first load, migrate old URLs and ensure at least one workspace exists
     useEffect(() => {
@@ -187,12 +207,15 @@ function App() {
             alert('Invalid URL or unsupported protocol. Use http:// or https://')
             return
         }
-        const { isDuplicate } = addLink(urlToAdd, newAlias, '', selectedWorkspaceId)
+        const resolvedTags = newTagNames.map((name) => getOrCreateTag(name)).filter(Boolean)
+        const tagUuids = resolvedTags.map((t) => t.uuid)
+        const { isDuplicate } = addLink(urlToAdd, newAlias, '', selectedWorkspaceId, tagUuids)
         if (isDuplicate) {
             setToastMessage('Este link já existe neste workspace.')
         } else {
             setNewUrl('')
             setNewAlias('')
+            setNewTagNames([])
         }
     }
 
@@ -201,6 +224,11 @@ function App() {
         setEditingLinkId(item.uuid)
         setEditUrl(item.url)
         setEditAlias(item.name || '')
+        setEditTagNames(
+            (item.tagUuids || [])
+                .map((uuid) => tags.find((t) => t.uuid === uuid)?.name)
+                .filter(Boolean)
+        )
     }
 
     const handleCancelEdit = (e) => {
@@ -208,6 +236,7 @@ function App() {
         setEditingLinkId(null)
         setEditUrl('')
         setEditAlias('')
+        setEditTagNames([])
     }
 
     const handleSaveEdit = (e, item) => {
@@ -217,15 +246,26 @@ function App() {
             alert('Invalid URL or unsupported protocol. Use http:// or https://')
             return
         }
-        editLink(item.uuid, newUrl, editAlias, '')
-        
+        const resolvedTags = editTagNames.map((name) => getOrCreateTag(name)).filter(Boolean)
+        const tagUuids = resolvedTags.map((t) => t.uuid)
+        editLink(item.uuid, newUrl, editAlias, '', tagUuids)
+
         if (connectionStatus === 'connected' && apiUrl) {
-            window.api.updateSyncedLink({ apiUrl, uuid: item.uuid, payload: { url: newUrl, name: editAlias } })
+            window.api.updateSyncedLink({
+                apiUrl,
+                uuid: item.uuid,
+                payload: {
+                    url: newUrl,
+                    name: editAlias,
+                    tags: resolvedTags.map((t) => ({ uuid: t.uuid, name: t.name }))
+                }
+            })
         }
-        
+
         setEditingLinkId(null)
         setEditUrl('')
         setEditAlias('')
+        setEditTagNames([])
     }
 
     const handleRemoveLink = (uuid) => {
@@ -263,18 +303,28 @@ function App() {
     const applyPull = async () => {
         const result = await pullSync()
         if (result.ok && result.data) {
-            // Run analysis before merging — compare current local state vs server
             const { uuidReconciliation } = await runAnalysis(workspaces, links, result.data)
 
-            // Apply UUID reconciliation (server UUID is authoritative)
             for (const [oldUuid, newUuid] of Object.entries(uuidReconciliation)) {
                 reconcileWorkspaceUuid(oldUuid, newUuid)
                 updateLinksWorkspaceId(oldUuid, newUuid)
             }
 
-            // Merge items that exist on server but not locally
             mergeWorkspaces(result.data.workspaces)
             mergeLinks(result.data.links)
+
+            // Merge tags from remote links into local tag store
+            const remoteTags = []
+            const seen = new Set()
+            for (const link of result.data.links) {
+                for (const tag of (link.tags || [])) {
+                    if (!seen.has(tag.uuid)) {
+                        remoteTags.push(tag)
+                        seen.add(tag.uuid)
+                    }
+                }
+            }
+            mergeTags(remoteTags)
         }
     }
 
@@ -286,7 +336,7 @@ function App() {
 
     const handleSyncWorkspace = async () => {
         if (!selectedWorkspace) return
-        await syncWorkspace(selectedWorkspace, workspaceLinks)
+        await syncWorkspace(selectedWorkspace, workspaceLinks, tags)
         applyPull()
     }
 
@@ -295,7 +345,7 @@ function App() {
         if (!ws) return
         const wsLinks = getLinksForWorkspace(workspaceUuid)
         setSyncingWorkspaceUuid(workspaceUuid)
-        await syncWorkspace(ws, wsLinks)
+        await syncWorkspace(ws, wsLinks, tags)
         applyPull()
         setTimeout(() => setSyncingWorkspaceUuid(null), 3000)
     }
@@ -305,7 +355,7 @@ function App() {
         if (!ws) return
         const allWsLinks = getLinksForWorkspace(link.workspaceId)
         setSyncingLinkUuid(link.uuid)
-        await syncSingleLink(ws, link, allWsLinks)
+        await syncSingleLink(ws, link, allWsLinks, tags)
         setSyncingLinkUuid(null)
     }
 
@@ -575,7 +625,9 @@ function App() {
                             <div className="mb-4 flex items-center gap-2 text-gray-500 text-sm">
                                 <Layers size={14} />
                                 <span className="font-medium text-gray-300">{selectedWorkspace.name}</span>
-                                <span className="text-gray-600">· {workspaceLinks.length} link{workspaceLinks.length !== 1 ? 's' : ''}</span>
+                                <span className="text-gray-600">
+                                    · {filteredLinks.length}{filteredLinks.length !== workspaceLinks.length ? `/${workspaceLinks.length}` : ''} link{workspaceLinks.length !== 1 ? 's' : ''}
+                                </span>
                             </div>
                         )}
 
@@ -605,6 +657,7 @@ function App() {
                                         placeholder="Name (optional)"
                                         className="w-full bg-[#0d0a14] border border-purple-900/40 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
                                     />
+                                    <TagInput value={newTagNames} onChange={setNewTagNames} />
                                     <button
                                         onClick={addLinkToWorkspace}
                                         className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 font-medium transition-colors w-full flex items-center justify-center gap-2"
@@ -615,9 +668,43 @@ function App() {
                             </div>
                         )}
 
+                        {selectedWorkspace && workspaceTags.length > 0 && (
+                            <div className="mb-4 flex flex-wrap gap-2 items-center">
+                                <span className="text-xs text-gray-600 uppercase tracking-wider">Filtrar:</span>
+                                {workspaceTags.map((tag) => {
+                                    const isActive = activeTagFilter.includes(tag.uuid)
+                                    return (
+                                        <button
+                                            key={tag.uuid}
+                                            onClick={() => setActiveTagFilter((prev) =>
+                                                isActive
+                                                    ? prev.filter((u) => u !== tag.uuid)
+                                                    : [...prev, tag.uuid]
+                                            )}
+                                            className={`text-xs px-2.5 py-1 border transition-colors ${
+                                                isActive
+                                                    ? 'bg-purple-700/70 border-purple-500 text-white'
+                                                    : 'bg-transparent border-purple-900/40 text-gray-400 hover:border-purple-600 hover:text-gray-200'
+                                            }`}
+                                        >
+                                            {tag.name}
+                                        </button>
+                                    )
+                                })}
+                                {activeTagFilter.length > 0 && (
+                                    <button
+                                        onClick={() => setActiveTagFilter([])}
+                                        className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+                                    >
+                                        Limpar filtro
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
                         {selectedWorkspace && (
                             <div className="grid grid-cols-1 gap-4">
-                                {workspaceLinks.map((item) => (
+                                {filteredLinks.map((item) => (
                                     <div
                                         key={item.uuid}
                                         draggable
@@ -652,6 +739,7 @@ function App() {
                                                     className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm text-gray-200"
                                                     placeholder="Name"
                                                 />
+                                                <TagInput value={editTagNames} onChange={setEditTagNames} />
                                             </div>
                                         ) : (
                                             <div
@@ -664,13 +752,28 @@ function App() {
                                                 <div className="w-10 h-10 bg-[#0d0a14] flex items-center justify-center shrink-0 border border-purple-900/30 overflow-hidden">
                                                     <PageIcon url={item.url} />
                                                 </div>
-                                                <div className="min-w-0 truncate">
+                                                <div className="min-w-0">
                                                     <h3 className="font-semibold text-gray-100 truncate">
                                                         {item.name || cleanUrl(item.url)}
                                                     </h3>
                                                     <p className="text-xs text-gray-500 truncate">
                                                         {item.name ? cleanUrl(item.url) : 'Click to open'}
                                                     </p>
+                                                    {(item.tagUuids || []).length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                                            {(item.tagUuids || []).map((uuid) => {
+                                                                const tag = tags.find((t) => t.uuid === uuid)
+                                                                return tag ? (
+                                                                    <span
+                                                                        key={uuid}
+                                                                        className="text-[10px] px-1.5 py-0.5 bg-purple-900/40 border border-purple-800/40 text-purple-300"
+                                                                    >
+                                                                        {tag.name}
+                                                                    </span>
+                                                                ) : null
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -776,6 +879,11 @@ function App() {
                                 {workspaceLinks.length === 0 && (
                                     <div className="text-center py-12 text-gray-500">
                                         No links yet. Add one above!
+                                    </div>
+                                )}
+                                {workspaceLinks.length > 0 && filteredLinks.length === 0 && (
+                                    <div className="text-center py-12 text-gray-600">
+                                        Nenhum link com todas as tags selecionadas.
                                     </div>
                                 )}
                             </div>

@@ -128,7 +128,7 @@ export function useSync() {
         return { uuidReconciliation }
     }
 
-    const syncWorkspace = async (workspace, links) => {
+    const syncWorkspace = async (workspace, links, allTags = []) => {
         if (!apiUrl || connectionStatus !== 'connected') {
             return { ok: false, error: 'Not connected to API' }
         }
@@ -139,7 +139,11 @@ export function useSync() {
             uuid: l.uuid,
             url: l.url,
             name: l.name || null,
-            description: l.description || null
+            description: l.description || null,
+            tags: (l.tagUuids || [])
+                .map((uuid) => allTags.find((t) => t.uuid === uuid))
+                .filter(Boolean)
+                .map((t) => ({ uuid: t.uuid, name: t.name }))
         }))
 
         const result = await window.api.syncWorkspace({
@@ -168,10 +172,15 @@ export function useSync() {
      * Updates syncAnalysis for the link and recalculates its workspace status.
      * allWorkspaceLinks: all links belonging to the same workspace (for status recalculation).
      */
-    const syncSingleLink = async (workspace, linkToSync, allWorkspaceLinks) => {
+    const syncSingleLink = async (workspace, linkToSync, allWorkspaceLinks, allTags = []) => {
         if (!apiUrl || connectionStatus !== 'connected') {
             return { ok: false, error: 'Not connected to API' }
         }
+
+        const linkTags = (linkToSync.tagUuids || [])
+            .map((uuid) => allTags.find((t) => t.uuid === uuid))
+            .filter(Boolean)
+            .map((t) => ({ uuid: t.uuid, name: t.name }))
 
         const result = await window.api.syncWorkspace({
             apiUrl,
@@ -180,7 +189,8 @@ export function useSync() {
                 uuid: linkToSync.uuid,
                 url: linkToSync.url,
                 name: linkToSync.name || null,
-                description: linkToSync.description || null
+                description: linkToSync.description || null,
+                tags: linkTags
             }]
         })
 
