@@ -15,6 +15,7 @@ import { useLinks } from './hooks/useLinks'
 import { useSync } from './hooks/useSync'
 import { useTags } from './hooks/useTags'
 import TagInput from './components/TagInput'
+import CreateLinkModal from './components/CreateLinkModal'
 
 // FIX-6: Removed Google fallback to prevent hostname leakage to a third-party.
 function PageIcon({ url, eager = true }) {
@@ -70,12 +71,19 @@ function App() {
     const [migrated, setMigrated] = useState(false)
     const [openMoveDropdownId, setOpenMoveDropdownId] = useState(null)
     const [toastMessage, setToastMessage] = useState(null)
+    const [toastType, setToastType] = useState('info')
+
+    const showToast = (message, type = 'info') => {
+        setToastMessage(message)
+        setToastType(type)
+    }
     const [editingLinkId, setEditingLinkId] = useState(null)
     const [editUrl, setEditUrl] = useState('')
     const [editAlias, setEditAlias] = useState('')
     const [editTagNames, setEditTagNames] = useState([])
     const [newTagNames, setNewTagNames] = useState([])
     const [activeTagFilter, setActiveTagFilter] = useState([])
+    const [isCreateLinkModalOpen, setIsCreateLinkModalOpen] = useState(false)
 
     // Splash screen
     const [showSplash, setShowSplash] = useState(true)
@@ -200,23 +208,28 @@ function App() {
         ghostTimeoutRef.current = setTimeout(() => setIsGhostHidden(false), 3000)
     }
 
-    const addLinkToWorkspace = () => {
-        if (!newUrl || !selectedWorkspaceId) return
-        const urlToAdd = sanitizeUrl(newUrl)
+    const createLink = (urlRaw, aliasVal, tagNames) => {
+        if (!urlRaw || !selectedWorkspaceId) return
+        const urlToAdd = sanitizeUrl(urlRaw)
         if (!urlToAdd) {
-            alert('Invalid URL or unsupported protocol. Use http:// or https://')
+            showToast('URL inválida ou protocolo não suportado. Use http:// ou https://', 'error')
             return
         }
-        const resolvedTags = newTagNames.map((name) => getOrCreateTag(name)).filter(Boolean)
+        const resolvedTags = tagNames.map((name) => getOrCreateTag(name)).filter(Boolean)
         const tagUuids = resolvedTags.map((t) => t.uuid)
-        const { isDuplicate } = addLink(urlToAdd, newAlias, '', selectedWorkspaceId, tagUuids)
+        const { isDuplicate } = addLink(urlToAdd, aliasVal, '', selectedWorkspaceId, tagUuids)
         if (isDuplicate) {
-            setToastMessage('Este link já existe neste workspace.')
+            showToast('Este link já existe neste workspace.', 'error')
         } else {
-            setNewUrl('')
-            setNewAlias('')
-            setNewTagNames([])
+            showToast('Link adicionado com sucesso!', 'success')
         }
+    }
+
+    const addLinkToWorkspace = () => {
+        createLink(newUrl, newAlias, newTagNames)
+        setNewUrl('')
+        setNewAlias('')
+        setNewTagNames([])
     }
 
     const handleStartEdit = (e, item) => {
@@ -639,34 +652,22 @@ function App() {
                         )}
 
                         {selectedWorkspace && (
-                            <div className="bg-[#1a0f2e] p-4 sm:p-6 shadow-lg border border-purple-900/30 mb-8">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-200">Add New Link</h2>
-                                <div className="flex flex-col gap-3">
-                                    <input
-                                        type="text"
-                                        value={newUrl}
-                                        onChange={(e) => setNewUrl(e.target.value)}
-                                        placeholder="Enter URL (e.g. google.com)"
-                                        className="w-full bg-[#0d0a14] border border-purple-900/40 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={newAlias}
-                                        onChange={(e) => setNewAlias(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && addLinkToWorkspace()}
-                                        placeholder="Name (optional)"
-                                        className="w-full bg-[#0d0a14] border border-purple-900/40 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-200"
-                                    />
-                                    <TagInput value={newTagNames} onChange={setNewTagNames} />
-                                    <button
-                                        onClick={addLinkToWorkspace}
-                                        className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 font-medium transition-colors w-full flex items-center justify-center gap-2"
-                                    >
-                                        <Plus size={16} /> Add Link
-                                    </button>
-                                </div>
+                            <div className="mb-8">
+                                <button
+                                    onClick={() => setIsCreateLinkModalOpen(true)}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-purple-900/50 text-gray-400 hover:text-gray-200 hover:border-purple-700/60 hover:bg-purple-900/10 transition-all text-sm font-medium no-drag"
+                                >
+                                    <Plus size={15} className="text-purple-400" />
+                                    Add New Link
+                                </button>
                             </div>
                         )}
+
+                        <CreateLinkModal
+                            isOpen={isCreateLinkModalOpen}
+                            onClose={() => setIsCreateLinkModalOpen(false)}
+                            onSubmit={({ url, alias, tags }) => createLink(url, alias, tags)}
+                        />
 
                         {selectedWorkspace && workspaceTags.length > 0 && (
                             <div className="mb-4 flex flex-wrap gap-2 items-center">
@@ -849,7 +850,7 @@ function App() {
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             navigator.clipboard.writeText(item.url)
-                                                            setToastMessage('Link copiado para a área de transferência')
+                                                            showToast('Link copiado para a área de transferência', 'info')
                                                         }}
                                                         className="p-2 text-gray-500 hover:text-blue-400 hover:bg-purple-900/20 transition-colors opacity-0 group-hover:opacity-100"
                                                         title="Copy URL"
@@ -943,7 +944,7 @@ function App() {
                 </div>
             )}
 
-            <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+            <Toast message={toastMessage} type={toastType} onClose={() => { setToastMessage(null); setToastType('info') }} />
             <UpdateNotifier />
         </div>
     )

@@ -1,7 +1,31 @@
 import { useEffect } from 'react'
-import { X, Info } from 'lucide-react'
+import { X, Info, CheckCircle2, AlertCircle } from 'lucide-react'
 
-export default function Toast({ message, onClose }) {
+const VARIANTS = {
+    info: {
+        icon: Info,
+        iconClass: 'text-purple-300',
+        bgIcon: 'bg-purple-500/20 border-purple-400/30',
+        border: 'border-purple-400/20',
+        label: 'Aviso',
+    },
+    success: {
+        icon: CheckCircle2,
+        iconClass: 'text-emerald-300',
+        bgIcon: 'bg-emerald-500/20 border-emerald-400/30',
+        border: 'border-emerald-400/20',
+        label: 'Sucesso',
+    },
+    error: {
+        icon: AlertCircle,
+        iconClass: 'text-red-300',
+        bgIcon: 'bg-red-500/20 border-red-400/30',
+        border: 'border-red-400/20',
+        label: 'Erro',
+    },
+}
+
+export default function Toast({ message, type = 'info', onClose }) {
     useEffect(() => {
         if (message) {
             const timer = setTimeout(onClose, 4000)
@@ -11,23 +35,21 @@ export default function Toast({ message, onClose }) {
 
     if (!message) return null
 
+    const v = VARIANTS[type] ?? VARIANTS.info
+    const Icon = v.icon
+
     return (
         <div className="fixed top-20 right-8 z-[120] animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="brushed-metal group relative flex items-center gap-4 px-6 py-4 shadow-2xl border border-purple-400/20 max-w-sm overflow-hidden bg-[#1a0f2e]">
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-purple-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+            <div className={`brushed-metal group relative flex items-center gap-4 px-6 py-4 shadow-2xl border ${v.border} max-w-sm overflow-hidden bg-[#1a0f2e]`}>
+                <div className="absolute inset-0 bg-purple-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
 
-                <div className="relative flex items-center justify-center w-12 h-12 bg-purple-500/20 shrink-0 border border-purple-400/30">
-                    <Info className="text-purple-300" size={24} />
+                <div className={`relative flex items-center justify-center w-12 h-12 shrink-0 border ${v.bgIcon}`}>
+                    <Icon className={v.iconClass} size={24} />
                 </div>
 
                 <div className="relative flex flex-col min-w-0 pr-6">
-                    <h3 className="font-bold text-white leading-tight">
-                        Aviso
-                    </h3>
-                    <p className="text-xs text-slate-300/90 font-medium mt-1">
-                        {message}
-                    </p>
+                    <h3 className="font-bold text-white leading-tight">{v.label}</h3>
+                    <p className="text-xs text-slate-300/90 font-medium mt-1">{message}</p>
                 </div>
 
                 <button
