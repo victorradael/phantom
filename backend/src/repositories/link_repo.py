@@ -17,47 +17,64 @@ def _to_link(row: asyncpg.Record) -> Link:
     )
 
 
-async def get_all(pool: asyncpg.Pool) -> list[Link]:
-    rows = await pool.fetch("SELECT * FROM links ORDER BY id")
-    return [_to_link(r) for r in rows]
-
-
-async def get_by_workspace(pool: asyncpg.Pool, workspace_id: int) -> list[Link]:
+async def get_all(pool: asyncpg.Pool, tenant_id: int) -> list[Link]:
     rows = await pool.fetch(
-        "SELECT * FROM links WHERE workspace_id = $1 ORDER BY id", workspace_id
+        "SELECT * FROM links WHERE tenant_id = $1 ORDER BY id", tenant_id
     )
     return [_to_link(r) for r in rows]
 
 
-async def get_by_id(pool: asyncpg.Pool, link_id: int) -> Link | None:
-    row = await pool.fetchrow("SELECT * FROM links WHERE id = $1", link_id)
-    return _to_link(row) if row else None
+async def get_by_workspace(
+    pool: asyncpg.Pool, workspace_id: int, tenant_id: int
+) -> list[Link]:
+    rows = await pool.fetch(
+        "SELECT * FROM links WHERE workspace_id = $1 AND tenant_id = $2 ORDER BY id",
+        workspace_id,
+        tenant_id,
+    )
+    return [_to_link(r) for r in rows]
 
 
-async def get_by_uuid(pool: asyncpg.Pool, uuid: str) -> Link | None:
+async def get_by_id(
+    pool: asyncpg.Pool, link_id: int, tenant_id: int
+) -> Link | None:
     row = await pool.fetchrow(
-        "SELECT * FROM links WHERE uuid = $1::uuid", uuid
+        "SELECT * FROM links WHERE id = $1 AND tenant_id = $2",
+        link_id,
+        tenant_id,
     )
     return _to_link(row) if row else None
 
 
-async def create(pool: asyncpg.Pool, data: LinkCreate) -> Link:
+async def get_by_uuid(
+    pool: asyncpg.Pool, uuid: str, tenant_id: int
+) -> Link | None:
+    row = await pool.fetchrow(
+        "SELECT * FROM links WHERE uuid = $1::uuid AND tenant_id = $2",
+        uuid,
+        tenant_id,
+    )
+    return _to_link(row) if row else None
+
+
+async def create(pool: asyncpg.Pool, data: LinkCreate, tenant_id: int) -> Link:
     row = await pool.fetchrow(
         """
-        INSERT INTO links (url, name, description, workspace_id)
-             VALUES ($1, $2, $3, $4)
+        INSERT INTO links (url, name, description, workspace_id, tenant_id)
+             VALUES ($1, $2, $3, $4, $5)
         RETURNING *
         """,
         data.url,
         data.name,
         data.description,
         data.workspace_id,
+        tenant_id,
     )
     return _to_link(row)
 
 
 async def update(
-    pool: asyncpg.Pool, link_id: int, data: LinkUpdate
+    pool: asyncpg.Pool, link_id: int, data: LinkUpdate, tenant_id: int
 ) -> Link | None:
     row = await pool.fetchrow(
         """
@@ -67,7 +84,7 @@ async def update(
                description  = COALESCE($3, description),
                workspace_id = COALESCE($4, workspace_id),
                updated_at   = now()
-         WHERE id = $5
+         WHERE id = $5 AND tenant_id = $6
         RETURNING *
         """,
         data.url,
@@ -75,22 +92,32 @@ async def update(
         data.description,
         data.workspace_id,
         link_id,
+        tenant_id,
     )
     return _to_link(row) if row else None
 
 
-async def delete(pool: asyncpg.Pool, link_id: int) -> None:
-    await pool.execute("DELETE FROM links WHERE id = $1", link_id)
+async def delete(pool: asyncpg.Pool, link_id: int, tenant_id: int) -> None:
+    await pool.execute(
+        "DELETE FROM links WHERE id = $1 AND tenant_id = $2",
+        link_id,
+        tenant_id,
+    )
 
 
-async def delete_by_uuid(pool: asyncpg.Pool, uuid: str) -> None:
-    await pool.execute("DELETE FROM links WHERE uuid = $1::uuid", uuid)
+async def delete_by_uuid(pool: asyncpg.Pool, uuid: str, tenant_id: int) -> None:
+    await pool.execute(
+        "DELETE FROM links WHERE uuid = $1::uuid AND tenant_id = $2",
+        uuid,
+        tenant_id,
+    )
 
 
 async def bulk_upsert(
     conn: asyncpg.Connection | asyncpg.Pool,
     links: list,
     workspace_id: int,
+    tenant_id: int,
 ) -> None:
     if not links:
         return
@@ -100,11 +127,11 @@ async def bulk_upsert(
     descriptions = [l.description for l in links]
     await conn.execute(
         """
-        INSERT INTO links (uuid, url, name, description, workspace_id)
-        SELECT d.uuid::uuid, d.url, d.name, d.description, $5
+        INSERT INTO links (uuid, url, name, description, workspace_id, tenant_id)
+        SELECT d.uuid::uuid, d.url, d.name, d.description, $5, $6
           FROM unnest($1::text[], $2::text[], $3::text[], $4::text[])
                AS d(uuid, url, name, description)
-        ON CONFLICT (uuid)
+        ON CONFLICT (uuid, tenant_id)
           DO UPDATE SET url          = EXCLUDED.url,
                         name         = EXCLUDED.name,
                         description  = EXCLUDED.description,
@@ -116,6 +143,7 @@ async def bulk_upsert(
         names,
         descriptions,
         workspace_id,
+        tenant_id,
     )
 
 
@@ -126,12 +154,13 @@ async def upsert_by_uuid(
     name: str | None,
     description: str | None,
     workspace_id: int,
+    tenant_id: int,
 ) -> Link:
     row = await pool.fetchrow(
         """
-        INSERT INTO links (uuid, url, name, description, workspace_id)
-             VALUES ($1::uuid, $2, $3, $4, $5)
-        ON CONFLICT (uuid)
+        INSERT INTO links (uuid, url, name, description, workspace_id, tenant_id)
+             VALUES ($1::uuid, $2, $3, $4, $5, $6)
+        ON CONFLICT (uuid, tenant_id)
           DO UPDATE SET url          = EXCLUDED.url,
                         name         = EXCLUDED.name,
                         description  = EXCLUDED.description,
@@ -144,5 +173,6 @@ async def upsert_by_uuid(
         name,
         description,
         workspace_id,
+        tenant_id,
     )
     return _to_link(row)
