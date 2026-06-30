@@ -66,3 +66,81 @@ WHERE tenant_id = $1;
 ## 6. Contexto Adicional
 - **Estrutura de Arquivos:** Todo o código backend reside na pasta `backend/`. As rotas HTTP ficam sob `backend/src/api/`, a lógica em `backend/src/services/` e a camada de dados em `backend/src/repositories/`.
 - **Validação de Inputs:** Não esquecer de utilizar os schemas Pydantic na pasta `backend/src/schemas/` conforme as boas práticas que já estão implementadas. Alterações neles devem se ater ao necessário para suportar o multi-tenant, sem quebrar os contratos do cliente.
+
+---
+
+## 7. Geração do Token (Backend)
+
+### 7.1 Estratégia
+O token JWT é gerado de forma **stateless**: não há tabela de usuários. O operador/admin escolhe um `tenant_id` inteiro positivo qualquer, chama o endpoint de geração e recebe o JWT assinado com o `jwt_secret` configurado no servidor. O backend nunca persiste o token — apenas o valida por assinatura em cada requisição.
+
+### 7.2 Endpoint `POST /admin/tokens`
+- **Proteção:** o endpoint exige um header `X-Admin-Secret` cujo valor deve coincidir com a variável de ambiente `ADMIN_SECRET` configurada no servidor. Requisições sem o header ou com valor incorreto recebem `403 Forbidden`.
+- **Request body:**
+  ```json
+  { "tenant_id": 42 }
+  ```
+- **Validações:**
+  - `tenant_id` deve ser um inteiro positivo (`>= 1`).
+  - `tenant_id` igual ao valor reservado (`0`) deve ser rejeitado com `422 Unprocessable Entity`.
+- **Response (200 OK):**
+  ```json
+  { "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+  ```
+- O JWT gerado **não** contém `exp` (sem expiração por padrão), pois o token é tratado como API key de longa duração. O operador pode invalidar todos os tokens trocando o `jwt_secret` no servidor.
+- O router é registrado em `src/api/admin.py` e montado em `/admin` no `main.py`.
+
+### 7.3 Configuração necessária no servidor
+Adicionar ao `Settings` (e ao `.env`):
+```env
+ADMIN_SECRET=troque-este-valor-em-producao
+```
+
+### 7.4 Exemplo de uso
+```http
+POST /admin/tokens HTTP/1.1
+Host: localhost:8000
+X-Admin-Secret: troque-este-valor-em-producao
+Content-Type: application/json
+
+{ "tenant_id": 42 }
+```
+Resposta:
+```json
+{ "token": "eyJ..." }
+```
+O operador copia o token retornado e o cola na extensão (ver Seção 8).
+
+---
+
+## 8. Configuração do Token na Extensão (Frontend)
+
+### 8.1 Onde o token é fornecido
+O token é colado pelo usuário na **sidebar de configurações de workspaces** (`WorkspaceSidebar`), na mesma seção onde já existe o campo de URL da API (`localApiUrl`). Um novo campo "API Token" é adicionado logo abaixo do campo de URL.
+
+### 8.2 Persistência
+O token é armazenado junto com a URL no Electron store, dentro da chave `syncConfig`:
+```js
+// estrutura atual
+{ apiUrl: 'http://...', lastSynced: null }
+
+// estrutura após a mudança
+{ apiUrl: 'http://...', apiToken: 'eyJ...', lastSynced: null }
+```
+A leitura e escrita do `apiToken` seguem o mesmo padrão do `apiUrl`: `window.api.getSyncConfig()` / `window.api.saveSyncConfig(config)`.
+
+### 8.3 Envio nas requisições
+Todos os `fetch` realizados em `electron/main.js` que chamam a API do backend devem incluir o header:
+```
+Authorization: Bearer <apiToken>
+```
+Isso se aplica a todos os handlers IPC que fazem chamadas HTTP: `test-api-connection`, `pull-sync`, `sync-workspace`, `update-synced-link`, `delete-synced-link`, `delete-synced-workspace`.
+
+### 8.4 Comportamento esperado na UI
+- Enquanto o token estiver vazio, o status de conexão permanece `'unconfigured'` (mesmo comportamento atual quando a URL está vazia).
+- O botão "Testar Conexão" só deve ser habilitado quando ambos os campos (URL e token) estiverem preenchidos.
+- Erros `401` / `403` recebidos do backend devem atualizar o `connectionStatus` para `'disconnected'` e exibir uma mensagem clara ao usuário (ex: _"Token inválido ou sem permissão"_).
+
+### 8.5 Restrições
+- **Não armazenar o token em `localStorage` ou qualquer mecanismo acessível ao renderer diretamente.** O store do Electron (main process) é a única fonte de verdade, acessada via IPC (`window.api`).
+- **Não exibir o token em texto claro após salvo.** O campo deve ser do tipo `password` (com opção de toggle para exibição temporária), igual a um campo de senha convencional.

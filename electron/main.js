@@ -294,7 +294,7 @@ function createWindow() {
 
     // Sync configuration persistence
     rateLimitedHandle('get-sync-config', 20, 1000, () => {
-        return store.get('syncConfig', { apiUrl: '', lastSynced: null })
+        return store.get('syncConfig', { apiUrl: '', apiToken: '', lastSynced: null })
     })
 
     rateLimitedHandle('save-sync-config', 10, 1000, (_, config) => {
@@ -313,25 +313,32 @@ function createWindow() {
     })
 
     // Test API connection — runs from main process to avoid CSP restrictions
-    rateLimitedHandle('test-api-connection', 5, 5000, async (_, apiUrl) => {
+    rateLimitedHandle('test-api-connection', 5, 5000, async (_, { apiUrl, apiToken }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
                 return { ok: false, error: 'Invalid protocol — use http or https' }
             }
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
-            const res = await fetch(`${base}/health`, {
+            const healthRes = await fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) })
+            if (!healthRes.ok) return { ok: false, error: `HTTP ${healthRes.status}` }
+
+            const authRes = await fetch(`${base}/admin/verify`, {
+                headers: { Authorization: `Bearer ${apiToken}` },
                 signal: AbortSignal.timeout(5000)
             })
-            if (res.ok) return { ok: true }
-            return { ok: false, error: `HTTP ${res.status}` }
+            if (authRes.ok) return { ok: true }
+            if (authRes.status === 401 || authRes.status === 403) {
+                return { ok: false, error: 'Token inválido ou sem permissão' }
+            }
+            return { ok: false, error: `HTTP ${authRes.status}` }
         } catch (err) {
             return { ok: false, error: err.message || 'Connection failed' }
         }
     })
 
     // Update a single link from backend
-    rateLimitedHandle('update-synced-link', 10, 5000, async (_, { apiUrl, uuid, payload }) => {
+    rateLimitedHandle('update-synced-link', 10, 5000, async (_, { apiUrl, apiToken, uuid, payload }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
@@ -340,7 +347,7 @@ function createWindow() {
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
             const res = await fetch(`${base}/sync/link/${encodeURIComponent(uuid)}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiToken}` },
                 body: JSON.stringify(payload),
                 signal: AbortSignal.timeout(10000)
             })
@@ -351,7 +358,7 @@ function createWindow() {
     })
 
     // Delete a single link from backend
-    rateLimitedHandle('delete-synced-link', 10, 5000, async (_, { apiUrl, uuid }) => {
+    rateLimitedHandle('delete-synced-link', 10, 5000, async (_, { apiUrl, apiToken, uuid }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
@@ -360,6 +367,7 @@ function createWindow() {
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
             const res = await fetch(`${base}/sync/link/${encodeURIComponent(uuid)}`, {
                 method: 'DELETE',
+                headers: { Authorization: `Bearer ${apiToken}` },
                 signal: AbortSignal.timeout(10000)
             })
             return res.ok || res.status === 404 ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
@@ -369,7 +377,7 @@ function createWindow() {
     })
 
     // Delete a workspace (and cascade links) from backend
-    rateLimitedHandle('delete-synced-workspace', 5, 5000, async (_, { apiUrl, uuid }) => {
+    rateLimitedHandle('delete-synced-workspace', 5, 5000, async (_, { apiUrl, apiToken, uuid }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
@@ -378,6 +386,7 @@ function createWindow() {
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
             const res = await fetch(`${base}/sync/workspace/${encodeURIComponent(uuid)}`, {
                 method: 'DELETE',
+                headers: { Authorization: `Bearer ${apiToken}` },
                 signal: AbortSignal.timeout(10000)
             })
             return res.ok || res.status === 404 ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
@@ -387,14 +396,17 @@ function createWindow() {
     })
 
     // Pull all workspaces and links from backend
-    rateLimitedHandle('pull-sync', 5, 5000, async (_, apiUrl) => {
+    rateLimitedHandle('pull-sync', 5, 5000, async (_, { apiUrl, apiToken }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
                 return { ok: false, error: 'Invalid protocol — use http or https' }
             }
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
-            const res = await fetch(`${base}/sync`, { signal: AbortSignal.timeout(10000) })
+            const res = await fetch(`${base}/sync`, {
+                headers: { Authorization: `Bearer ${apiToken}` },
+                signal: AbortSignal.timeout(10000)
+            })
             if (res.ok) {
                 const data = await res.json()
                 return { ok: true, data }
@@ -407,7 +419,7 @@ function createWindow() {
     })
 
     // Sync workspace to backend — runs from main process to avoid CSP restrictions
-    rateLimitedHandle('sync-workspace', 60, 60000, async (_, { apiUrl, workspace, links }) => {
+    rateLimitedHandle('sync-workspace', 60, 60000, async (_, { apiUrl, apiToken, workspace, links }) => {
         try {
             const parsed = new URL(apiUrl)
             if (!['https:', 'http:'].includes(parsed.protocol)) {
@@ -416,7 +428,7 @@ function createWindow() {
             const base = parsed.origin + parsed.pathname.replace(/\/$/, '')
             const res = await fetch(`${base}/sync`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiToken}` },
                 body: JSON.stringify({ workspace, links }),
                 signal: AbortSignal.timeout(15000)
             })

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     reserved_tenant_id: int = 0
+    admin_secret: str = "change-me-in-production"
 
 
 settings = Settings()

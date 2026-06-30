@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 export function useSync() {
     const [apiUrl, setApiUrlState] = useState('')
+    const [apiToken, setApiTokenState] = useState('')
     const [connectionStatus, setConnectionStatus] = useState('unconfigured') // 'unconfigured' | 'testing' | 'connected' | 'disconnected'
     const [lastSynced, setLastSynced] = useState(null)
     const [syncStatus, setSyncStatus] = useState('idle') // 'idle' | 'syncing' | 'success' | 'error'
@@ -10,13 +11,12 @@ export function useSync() {
 
     useEffect(() => {
         window.api.getSyncConfig().then((config) => {
-            if (config?.apiUrl) {
-                setApiUrlState(config.apiUrl)
-                setConnectionStatus('disconnected')
-            }
-            if (config?.lastSynced) {
-                setLastSynced(config.lastSynced)
-            }
+            const url = config?.apiUrl || ''
+            const token = config?.apiToken || ''
+            setApiUrlState(url)
+            setApiTokenState(token)
+            if (url && token) setConnectionStatus('disconnected')
+            if (config?.lastSynced) setLastSynced(config.lastSynced)
         })
         window.api.getSyncAnalysis().then((analysis) => {
             if (analysis) setSyncAnalysis(analysis)
@@ -28,13 +28,21 @@ export function useSync() {
         setApiUrlState(trimmed)
         const config = await window.api.getSyncConfig()
         await window.api.saveSyncConfig({ ...config, apiUrl: trimmed })
-        setConnectionStatus(trimmed ? 'disconnected' : 'unconfigured')
+        setConnectionStatus(trimmed && apiToken ? 'disconnected' : 'unconfigured')
+    }
+
+    const setApiToken = async (token) => {
+        const trimmed = token.trim()
+        setApiTokenState(trimmed)
+        const config = await window.api.getSyncConfig()
+        await window.api.saveSyncConfig({ ...config, apiToken: trimmed })
+        setConnectionStatus(apiUrl && trimmed ? 'disconnected' : 'unconfigured')
     }
 
     const testConnection = async () => {
-        if (!apiUrl) return { ok: false, error: 'No API URL configured' }
+        if (!apiUrl || !apiToken) return { ok: false, error: 'URL e token são obrigatórios' }
         setConnectionStatus('testing')
-        const result = await window.api.testApiConnection(apiUrl)
+        const result = await window.api.testApiConnection({ apiUrl, apiToken })
         setConnectionStatus(result.ok ? 'connected' : 'disconnected')
         return result
     }
@@ -148,6 +156,7 @@ export function useSync() {
 
         const result = await window.api.syncWorkspace({
             apiUrl,
+            apiToken,
             workspace: { uuid: workspace.uuid, name: workspace.name },
             links: linkPayload
         })
@@ -184,6 +193,7 @@ export function useSync() {
 
         const result = await window.api.syncWorkspace({
             apiUrl,
+            apiToken,
             workspace: { uuid: workspace.uuid, name: workspace.name },
             links: [{
                 uuid: linkToSync.uuid,
@@ -233,12 +243,14 @@ export function useSync() {
         if (!apiUrl || connectionStatus !== 'connected') {
             return { ok: false, error: 'Not connected to API' }
         }
-        return await window.api.pullSync(apiUrl)
+        return await window.api.pullSync({ apiUrl, apiToken })
     }
 
     return {
         apiUrl,
         setApiUrl,
+        apiToken,
+        setApiToken,
         connectionStatus,
         testConnection,
         syncWorkspace,

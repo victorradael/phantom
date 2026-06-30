@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api import workspaces, links, sync
+from src.api import workspaces, links, sync, admin
 from src.db.database import init_pool, close_pool
 
 
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(workspaces.router, prefix="/workspaces", tags=["workspaces"])
 app.include_router(links.router, prefix="/links", tags=["links"])
 app.include_router(sync.router, prefix="/sync", tags=["sync"])
+app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 
 @app.get("/health", tags=["health"])

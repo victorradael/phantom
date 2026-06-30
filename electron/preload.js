@@ -37,9 +37,9 @@ contextBridge.exposeInMainWorld('api', {
     onUpdateDownloaded:   (cb) => ipcRenderer.on('update-downloaded', (_, info) => cb(info)),
     onUpdateError:        (cb) => ipcRenderer.on('update-error', (_, message) => cb(message)),
     // API operations (run in main process, bypasses renderer CSP)
-    testApiConnection:    (url) => ipcRenderer.invoke('test-api-connection', url),
+    testApiConnection: (payload) => ipcRenderer.invoke('test-api-connection', payload),
     syncWorkspace:     (payload) => ipcRenderer.invoke('sync-workspace', payload),
-    pullSync:           (apiUrl) => ipcRenderer.invoke('pull-sync', apiUrl),
+    pullSync:          (payload) => ipcRenderer.invoke('pull-sync', payload),
     deleteSyncedLink:   (payload) => ipcRenderer.invoke('delete-synced-link', payload),
     updateSyncedLink:   (payload) => ipcRenderer.invoke('update-synced-link', payload),
     deleteSyncedWorkspace: (payload) => ipcRenderer.invoke('delete-synced-workspace', payload)

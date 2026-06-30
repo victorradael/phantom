@@ -14,7 +14,9 @@ import {
     Link as LinkIcon,
     Layers,
     SidebarClose,
-    Info
+    Info,
+    Eye,
+    EyeOff
 } from 'lucide-react'
 
 function ConnectionIndicator({ status }) {
@@ -71,6 +73,8 @@ export default function WorkspaceSidebar({
     onRemoveWorkspace,
     apiUrl,
     onSetApiUrl,
+    apiToken,
+    onSetApiToken,
     connectionStatus,
     onTestConnection,
     onSyncWorkspace,
@@ -89,6 +93,8 @@ export default function WorkspaceSidebar({
     const [newWorkspaceName, setNewWorkspaceName] = useState('')
     const [showNewWorkspaceInput, setShowNewWorkspaceInput] = useState(false)
     const [localApiUrl, setLocalApiUrl] = useState(apiUrl)
+    const [localApiToken, setLocalApiToken] = useState(apiToken)
+    const [showToken, setShowToken] = useState(false)
     const [apiSectionOpen, setApiSectionOpen] = useState(true)
     const [workspaceSectionOpen, setWorkspaceSectionOpen] = useState(true)
     const [testResult, setTestResult] = useState(null)
@@ -110,6 +116,13 @@ export default function WorkspaceSidebar({
     const handleApiUrlBlur = () => {
         if (localApiUrl !== apiUrl) {
             onSetApiUrl(localApiUrl)
+            setTestResult(null)
+        }
+    }
+
+    const handleApiTokenBlur = () => {
+        if (localApiToken !== apiToken) {
+            onSetApiToken(localApiToken)
             setTestResult(null)
         }
     }
@@ -199,9 +212,9 @@ export default function WorkspaceSidebar({
 
                 {apiSectionOpen && (
                     <div className="px-3 pb-3 space-y-2">
-                        {!apiUrl && (
+                        {(!apiUrl || !apiToken) && (
                             <p className="text-xs text-gray-500 bg-[#1a0f2e] p-2 leading-relaxed">
-                                Configure an API URL to enable workspace synchronization.
+                                Configure a URL e o token para habilitar a sincronização.
                             </p>
                         )}
 
@@ -221,10 +234,35 @@ export default function WorkspaceSidebar({
                                 className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
                             />
 
+                            <div className="relative">
+                                <input
+                                    type={showToken ? 'text' : 'password'}
+                                    value={localApiToken}
+                                    onChange={(e) => setLocalApiToken(e.target.value)}
+                                    onBlur={handleApiTokenBlur}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleApiTokenBlur()
+                                            e.target.blur()
+                                        }
+                                    }}
+                                    placeholder="API Token"
+                                    className="w-full bg-[#0d0a14] border border-purple-900/40 px-3 py-1.5 pr-8 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder-gray-600 no-drag"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowToken((v) => !v)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors no-drag"
+                                    tabIndex={-1}
+                                >
+                                    {showToken ? <EyeOff size={11} /> : <Eye size={11} />}
+                                </button>
+                            </div>
+
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleTestConnection}
-                                    disabled={!localApiUrl || connectionStatus === 'testing'}
+                                    disabled={!localApiUrl || !localApiToken || connectionStatus === 'testing'}
                                     className="flex-1 text-xs px-3 py-1.5 bg-purple-900/40 hover:bg-purple-800/40 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 transition-colors flex items-center justify-center gap-1 no-drag"
                                 >
                                     {connectionStatus === 'testing' ? (

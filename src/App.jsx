@@ -121,6 +121,8 @@ function App() {
     const {
         apiUrl,
         setApiUrl,
+        apiToken,
+        setApiToken,
         connectionStatus,
         testConnection,
         syncWorkspace,
@@ -266,6 +268,7 @@ function App() {
         if (connectionStatus === 'connected' && apiUrl) {
             window.api.updateSyncedLink({
                 apiUrl,
+                apiToken,
                 uuid: item.uuid,
                 payload: {
                     url: newUrl,
@@ -285,7 +288,7 @@ function App() {
         removeLink(uuid)
         removeAnalysisEntries({ linkUuids: [uuid] })
         if (connectionStatus === 'connected' && apiUrl) {
-            window.api.deleteSyncedLink({ apiUrl, uuid })
+            window.api.deleteSyncedLink({ apiUrl, apiToken, uuid })
         }
     }
 
@@ -293,7 +296,7 @@ function App() {
         if (!uuid || !targetWorkspaceId || targetWorkspaceId === selectedWorkspaceId) return
         moveLinkWorkspace(uuid, targetWorkspaceId)
         if (connectionStatus === 'connected' && apiUrl) {
-            window.api.updateSyncedLink({ apiUrl, uuid, payload: { workspace_uuid: targetWorkspaceId } })
+            window.api.updateSyncedLink({ apiUrl, apiToken, uuid, payload: { workspace_uuid: targetWorkspaceId } })
         }
     }
 
@@ -309,7 +312,7 @@ function App() {
         removeWorkspace(uuid)
         removeAnalysisEntries({ workspaceUuid: uuid, linkUuids: wsLinks.map((l) => l.uuid) })
         if (connectionStatus === 'connected' && apiUrl) {
-            window.api.deleteSyncedWorkspace({ apiUrl, uuid })
+            window.api.deleteSyncedWorkspace({ apiUrl, apiToken, uuid })
         }
     }
 
@@ -560,6 +563,8 @@ function App() {
                     onRemoveWorkspace={handleRemoveWorkspace}
                     apiUrl={apiUrl}
                     onSetApiUrl={setApiUrl}
+                    apiToken={apiToken}
+                    onSetApiToken={setApiToken}
                     connectionStatus={connectionStatus}
                     onTestConnection={handleTestConnection}
                     onSyncWorkspace={handleSyncWorkspace}
