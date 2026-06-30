@@ -48,7 +48,7 @@ async def sync_workspace(
                     continue
 
                 tag_uuid_to_id = await tag_repo.upsert_for_workspace(
-                    conn, link_data.tags, workspace.id
+                    conn, link_data.tags, workspace.id, tenant_id
                 )
                 await tag_repo.set_link_tags(
                     conn, link_row["id"], list(tag_uuid_to_id.values())
@@ -155,7 +155,7 @@ async def update_link(
             async with pool.acquire() as conn:
                 async with conn.transaction():
                     tag_uuid_to_id = await tag_repo.upsert_for_workspace(
-                        conn, data.tags, link_row["workspace_id"]
+                        conn, data.tags, link_row["workspace_id"], tenant_id
                     )
                     await tag_repo.set_link_tags(
                         conn, link_row["id"], list(tag_uuid_to_id.values())

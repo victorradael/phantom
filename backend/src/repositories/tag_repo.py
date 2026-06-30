@@ -5,17 +5,18 @@ async def upsert_for_workspace(
     conn: asyncpg.Connection,
     tags: list,
     workspace_id: int,
+    tenant_id: int,
 ) -> dict[str, int]:
-    """Upsert tags scoped to a workspace. Returns {uuid: id}."""
+    """Upsert tags scoped to a workspace and tenant. Returns {uuid: id}."""
     if not tags:
         return {}
     result = {}
     for tag in tags:
         row = await conn.fetchrow(
             """
-            INSERT INTO tags (uuid, name, workspace_id)
-            VALUES ($1::uuid, $2, $3)
-            ON CONFLICT (uuid) DO UPDATE
+            INSERT INTO tags (uuid, name, workspace_id, tenant_id)
+            VALUES ($1::uuid, $2, $3, $4)
+            ON CONFLICT (uuid, tenant_id) DO UPDATE
                 SET name       = EXCLUDED.name,
                     updated_at = now()
             RETURNING id
@@ -23,6 +24,7 @@ async def upsert_for_workspace(
             tag.uuid,
             tag.name,
             workspace_id,
+            tenant_id,
         )
         result[tag.uuid] = row["id"]
     return result
