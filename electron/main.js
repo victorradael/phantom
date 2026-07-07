@@ -177,6 +177,7 @@ function createWindow() {
         const { x, y } = mainWindow.getBounds()
         mainWindow.setResizable(false)
         mainWindow.setBounds({ x, y, width: 380, height: 84 })
+        mainWindow.setAlwaysOnTop(true)
         return true
     })
 
@@ -186,6 +187,7 @@ function createWindow() {
             mainWindow.setBounds(preMiniPlayerBounds)
             preMiniPlayerBounds = null
         }
+        mainWindow.setAlwaysOnTop(false)
         return true
     })
 

@@ -395,11 +395,13 @@ function App() {
 
     const handleEnterMiniPlayer = () => {
         setIsMiniPlayerActive(true)
+        setIsAlwaysOnTop(true)
         window.api?.enterMiniPlayer()
     }
 
     const handleExitMiniPlayer = () => {
         setIsMiniPlayerActive(false)
+        setIsAlwaysOnTop(false)
         window.api?.exitMiniPlayer()
     }
 
@@ -634,6 +636,14 @@ function App() {
                                 >
                                     <Shield size={16} className="text-zinc-400" />
                                     <span className="text-sm hidden sm:inline">Bitwarden</span>
+                                </button>
+                                <button
+                                    onClick={handleEnterMiniPlayer}
+                                    className="p-2 bg-[#1a0f2e] hover:bg-purple-900/30 text-gray-300 flex items-center gap-2 transition-colors border border-purple-900/40 no-drag"
+                                    title="Mini Player"
+                                >
+                                    <Minimize2 size={16} className="text-zinc-400" />
+                                    <span className="text-sm hidden sm:inline">Mini Player</span>
                                 </button>
                             </div>
                         </header>
@@ -908,7 +918,20 @@ function App() {
             <div className="fixed top-0 left-0 right-0 h-1 z-[9999] draggable pointer-events-none"></div>
 
             {/* Main Content Area (Dashboard or Browser) */}
-            {currentUrl ? renderBrowser() : renderDashboard()}
+            {isMiniPlayerActive && !currentUrl ? (
+                <div className="h-full w-full">
+                    <MiniPlayer
+                        title=""
+                        url=""
+                        canGoBack={false}
+                        canGoForward={false}
+                        onBack={() => {}}
+                        onForward={() => {}}
+                        onReload={() => {}}
+                        onRestore={handleExitMiniPlayer}
+                    />
+                </div>
+            ) : currentUrl ? renderBrowser() : renderDashboard()}
 
             {/* Bitwarden Sidebar */}
             {isBitwardenOpen && (
